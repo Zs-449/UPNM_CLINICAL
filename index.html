@@ -946,8 +946,24 @@ window.addEventListener('DOMContentLoaded',()=>{
   modal=new bootstrap.Modal($('appModal'));
   const sid=sessionStorage.getItem('upnm_session');
   if(sid){const u=userById(+sid);if(u){USER=u;enterApp();}}
-  $('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+  $('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();
+                                                supabase
+.channel('appointments')
+.on(
+'postgres_changes',
+{
+event:'*',
+schema:'public',
+table:'appointments'
+},
+(payload)=>{
+loadAppointments();
+}
+)
+.subscribe();
+                                               });
 });
+
 </script>
 </body>
 </html>
