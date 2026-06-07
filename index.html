@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UPNM Clinical Management System</title>
+<style>
+  :root {
+    --primary: #1e5bb4;
+    --primary-dark: #164a93;
+    --primary-light: #e8f0fb;
+    --accent: #28a745;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --bg: #f5f7fb;
+    --white: #ffffff;
+    --border: #e5e7eb;
+    --shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  a { color: var(--primary); text-decoration: none; }
+
+  /* ========== Logo ========== */
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-mark {
+    width: 42px; height: 42px;
+    background: radial-gradient(circle at 50% 50%, #f4e5a7 0%, #d4af37 45%, #1e5bb4 50%, #164a93 100%);
+    border-radius: 50%;
+    border: 3px solid var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    font-weight: bold; color: #fff; font-size: 11px;
+  }
+  .logo-mark::before {
+    content: "★";
+    position: absolute;
+    color: #d4af37;
+    font-size: 18px;
+  }
+  .logo-text h1 { font-size: 16px; color: var(--primary); line-height: 1.1; }
+  .logo-text p { font-size: 10px; color: var(--muted); }
+
+  /* ========== Auth Pages ========== */
+  .auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1e5bb4 0%, #4a8fd4 100%);
+    padding: 20px;
+  }
+  .auth-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 40px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+  .auth-header { text-align: center; margin-bottom: 24px; }
+  .auth-header .logo { justify-content: center; margin-bottom: 12px; }
+  .auth-header h2 { font-size: 22px; color: var(--primary); margin-bottom: 6px; }
+  .auth-header p { color: var(--muted); font-size: 14px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; margin-bottom: 6px; font-weight: 600; color: var(--text); }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color .2s;
+    font-family: inherit;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--primary);
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    text-decoration: none;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-success { background: var(--accent); color: #fff; }
+  .btn-success:hover { background: #1e7e34; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #a71d2a; }
+  .btn-warning { background: var(--warning); color: #333; }
+  .btn-secondary { background: #e5e7eb; color: var(--text); }
+  .btn-secondary:hover { background: #d1d5db; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-block { width: 100%; margin-top: 8px; }
+  .auth-footer { text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted); }
+  .alert {
+    padding: 10px 14px; border-radius: 8px; margin-bottom: 14px;
+    font-size: 13px;
+  }
+  .alert-error { background: #fde2e4; color: #b02a37; }
+  .alert-success { background: #d1e7dd; color: #0f5132; }
+
+  /* ========== Dashboard Layout ========== */
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 250px;
+    background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #fff;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    z-index: 100;
+  }
+  .sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+  }
+  .sidebar-header .logo-text h1 { color: #fff; font-size: 14px; }
+  .sidebar-header .logo-text p { color: rgba(255,255,255,0.75); }
+  .sidebar-menu { padding: 12px 0; flex: 1; }
+  .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    color: rgba(255,255,255,0.85);
+    cursor: pointer;
+    font-size: 14px;
+    border-left: 3px solid transparent;
+    transition: all .2s;
+  }
+  .menu-item:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+  }
+  .menu-item.active {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border-left-color: var(--accent);
+  }
+  .menu-item .icon { font-size: 16px; width: 20px; text-align: center; }
+  .sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    font-size: 12px;
+  }
+
+  .main {
+    margin-left: 250px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .topbar {
+    height: 64px;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    box-shadow: var(--shadow);
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar h2 { font-size: 18px; color: var(--primary); }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .user-info { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px;
+  }
+  .user-details { line-height: 1.2; }
+  .user-details .name { font-size: 13px; font-weight: 600; }
+  .user-details .role { font-size: 11px; color: var(--muted); }
+
+  .content { padding: 24px; flex: 1; }
+
+  /* ========== Stat Cards ========== */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--white);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .stat-card.green { border-left-color: var(--accent); }
+  .stat-card.orange { border-left-color: #f59e0b; }
+  .stat-card.red { border-left-color: var(--danger); }
+  .stat-info .label { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .stat-info .value { font-size: 28px; font-weight: 700; color: var(--text); }
+  .stat-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: var(--primary-light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    color: var(--primary);
+  }
+  .stat-card.green .stat-icon { background: #d1fae5; color: #065f46; }
+  .stat-card.orange .stat-icon { background: #fef3c7; color: #92400e; }
+  .stat-card.red .stat-icon { background: #fee2e2; color: #991b1b; }
+
+  /* ========== Cards ========== */
+  .card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-header h3 { font-size: 16px; color: var(--primary); }
+
+  /* ========== Tables ========== */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  thead { background: var(--primary-light); }
+  th {
+    text-align: left;
+    padding: 12px;
+    color: var(--primary-dark);
+    font-weight: 600;
+    font-size: 13px;
+  }
+  td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr:hover { background: #f9fafb; }
+
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-pending { background: #fef3c7; color: #92400e; }
+  .badge-confirmed { background: #dbeafe; color: #1e40af; }
+  .badge-completed { background: #d1fae5; color: #065f46; }
+  .badge-cancelled { background: #fee2e2; color: #991b1b; }
+  .badge-active { background: #d1fae5; color: #065f46; }
+  .badge-inactive { background: #e5e7eb; color: #4b5563; }
+
+  /* ========== Modal ========== */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--white);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
+  }
+  .modal h3 { color: var(--primary); margin-bottom: 16px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+
+  /* ========== Queue Display ========== */
+  .queue-container {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #fff;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .queue-container .label { font-size: 14px; opacity: 0.9; margin-bottom: 8px; }
+  .queue-number {
+    font-size: 72px;
+    font-weight: 800;
+    line-height: 1;
+    margin: 10px 0;
+  }
+  .queue-info { font-size: 14px; opacity: 0.9; }
+
+  /* ========== Announcement ========== */
+  .announcement {
+    background: #fff7ed;
+    border-left: 4px solid #f59e0b;
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+  .announcement h4 { font-size: 14px; color: #92400e; margin-bottom: 4px; }
+  .announcement p { font-size: 13px; color: #78350f; }
+  .announcement .date { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ========== Forms ========== */
+  .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-form .full { grid-column: 1 / -1; }
+
+  /* ========== Mobile ========== */
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); transition: transform .3s; }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; }
+    .menu-toggle { display: flex !important; }
+    .grid-form { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+  }
+  .menu-toggle {
+    display: none;
+    background: none; border: none;
+    font-size: 22px; cursor: pointer; color: var(--primary);
+  }
+
+  .hidden { display: none !important; }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .empty-state p { margin-top: 8px; font-size: 14px; }
+
+  /* Login demo info */
+  .demo-info {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: #1e40af;
+  }
+  .demo-info strong { display: block; margin-bottom: 4px; }
+
+  .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN PAGE ============ -->
+<div id="loginPage" class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="logo">
+        <div class="logo-mark"></div>
+        <div class="logo-text">
+          <h1>UPNM Clinic</h1>
+          <p>Clinical Management System</p>
+        </div>
+      </div>
+      <h2>Welcome Back</h2>
+      <p>Sign in to your account</p>
+    </div>
+    <div class="demo-info">
+      <strong>🔑 Demo Accounts</strong>
+      admin@upnm.edu / admin123<br>
+      doctor@upnm.edu / doctor123<br>
+      student@upnm.edu / student123<br>
+      lecturer@upnm.edu / lecturer123
+    </div>
+    <div id="loginAlert"></div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" required placeholder="you@upnm.edu.my" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" required placeholder="••••••••" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+    </form>
+    <div class="auth-footer">
+      Don't have an account? <a href="#" onclick="showRegister()">Register here</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ REGISTER PAGE ============ -->
+<div id="registerPage" class="auth-wrapper hidden">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="logo">
+        <div class="logo-mark"></div>
+        <div class="logo-text">
+          <h1>UPNM Clinic</h1>
+          <p>Clinical Management System</p>
+        </div>
+      </div>
+      <h2>Create Account</h2>
+      <p>Register as a new user</p>
+    </div>
+    <div id="registerAlert"></div>
+    <form id="registerForm">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="regName" required placeholder="Your full name" />
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="regEmail" required placeholder="you@upnm.edu.my" />
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="regRole" required>
+          <option value="">Select your role</option>
+          <option value="student">Student</option>
+          <option value="lecturer">Lecturer</option>
+          <option value="doctor">Doctor</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="regPassword" required placeholder="Min 6 characters" />
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" id="regConfirm" required placeholder="Re-enter password" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+    </form>
+    <div class="auth-footer">
+      Already have an account? <a href="#" onclick="showLogin()">Sign in</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MAIN DASHBOARD LAYOUT ============ -->
+<div id="dashboardLayout" class="layout hidden">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-mark"></div>
+        <div class="logo-text">
+          <h1>UPNM Clinic</h1>
+          <p style="color:rgba(255,255,255,0.7)">Management System</p>
+        </div>
+      </div>
+    </div>
+    <nav class="sidebar-menu" id="sidebarMenu"></nav>
+    <div class="sidebar-footer">
+      <div>© 2025 UPNM Clinic</div>
+      <div style="color:rgba(255,255,255,0.6);margin-top:4px">v1.0.0</div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:14px">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <h2 id="pageTitle">Dashboard</h2>
+      </div>
+      <div class="topbar-right">
+        <div class="user-info">
+          <div class="avatar" id="userAvatar">U</div>
+          <div class="user-details">
+            <div class="name" id="userName">User</div>
+            <div class="role" id="userRole">Role</div>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="logout()">🚪 Logout</button>
+      </div>
+    </header>
+    <main class="content" id="content"></main>
+  </div>
+</div>
+
+<!-- ============ MODAL ============ -->
+<div class="modal-overlay" id="modal">
+  <div class="modal" id="modalBody"></div>
+</div>
+
+<script>
+/* ================================================
+   UPNM CLINICAL MANAGEMENT SYSTEM
+   Full simulation with localStorage persistence
+   ================================================ */
+
+// ---------- Data Initialization ----------
+const DB_KEY = 'upnm_clinic_db_v1';
+const SESSION_KEY = 'upnm_clinic_session_v1';
+
+function initDB() {
+  if (localStorage.getItem(DB_KEY)) return;
+  const hash = s => btoa(unescape(encodeURIComponent(s)));
+  const db = {
+    users: [
+      { id: 1, name: 'Administrator', email: 'admin@upnm.edu', password: hash('admin123'), role: 'admin', created_at: '2025-01-01' },
+      { id: 2, name: 'Dr. Ahmad Fauzi', email: 'doctor@upnm.edu', password: hash('doctor123'), role: 'doctor', speciality: 'General Practitioner', created_at: '2025-01-02' },
+      { id: 3, name: 'Dr. Siti Nurhaliza', email: 'siti@upnm.edu', password: hash('doctor123'), role: 'doctor', speciality: 'Pediatrics', created_at: '2025-01-03' },
+      { id: 4, name: 'Muhammad Ali', email: 'student@upnm.edu', password: hash('student123'), role: 'student', student_id: 'CD12345', created_at: '2025-01-10' },
+      { id: 5, name: 'Nur Syafiqah', email: 'student2@upnm.edu', password: hash('student123'), role: 'student', student_id: 'CD12346', created_at: '2025-01-11' },
+      { id: 6, name: 'Prof. Dr. Razak', email: 'lecturer@upnm.edu', password: hash('lecturer123'), role: 'lecturer', staff_id: 'STF001', created_at: '2025-01-05' },
+    ],
+    appointments: [
+      { id: 1, patient_id: 4, doctor_id: 2, date: todayStr(), time: '10:00', status: 'confirmed', notes: 'Routine check-up', queue_number: 1, created_at: '2025-01-15' },
+      { id: 2, patient_id: 5, doctor_id: 2, date: todayStr(), time: '10:30', status: 'confirmed', notes: 'Fever', queue_number: 2, created_at: '2025-01-15' },
+      { id: 3, patient_id: 6, doctor_id: 2, date: todayStr(), time: '11:00', status: 'pending', notes: 'Follow-up', queue_number: 3, created_at: '2025-01-15' },
+      { id: 4, patient_id: 4, doctor_id: 3, date: '2025-01-10', time: '09:00', status: 'completed', notes: 'Cold symptoms', queue_number: 1, created_at: '2025-01-10' },
+      { id: 5, patient_id: 5, doctor_id: 2, date: '2025-01-08', time: '14:00', status: 'completed', notes: 'Headache', queue_number: 2, created_at: '2025-01-08' },
+    ],
+    medical_records: [
+      { id: 1, patient_id: 4, doctor_id: 2, diagnosis: 'Common Cold', notes: 'Patient has mild fever and cough. Prescribed paracetamol and rest.', created_at: '2025-01-10' },
+      { id: 2, patient_id: 5, doctor_id: 2, diagnosis: 'Tension Headache', notes: 'Stress-related. Advised rest and hydration.', created_at: '2025-01-08' },
+    ],
+    prescriptions: [
+      { id: 1, patient_id: 4, doctor_id: 2, medicine: 'Paracetamol 500mg', dosage: '1 tablet 3 times daily', instructions: 'After meals. Drink plenty of water.', appointment_id: 4, created_at: '2025-01-10' },
+      { id: 2, patient_id: 4, doctor_id: 2, medicine: 'Cough Syrup', dosage: '10ml 3 times daily', instructions: 'Shake before use.', appointment_id: 4, created_at: '2025-01-10' },
+    ],
+    medical_certificates: [
+      { id: 1, patient_id: 4, doctor_id: 2, issue_date: '2025-01-10', duration: 2, remarks: 'Sick leave due to common cold. Rest recommended.', created_at: '2025-01-10' },
+    ],
+    announcements: [
+      { id: 1, title: 'Clinic Opening Hours', content: 'The UPNM Clinic is open from 8:00 AM to 5:00 PM, Monday to Friday. Closed on weekends and public holidays.', created_at: '2025-01-01' },
+      { id: 2, title: 'Flu Vaccination Program', content: 'Free flu vaccination available for all students and staff. Visit the clinic to get vaccinated.', created_at: '2025-01-12' },
+      { id: 3, title: 'New Online Booking System', content: 'You can now book appointments online through our portal. Walk-ins also welcome.', created_at: '2025-01-14' },
+    ],
+    doctor_schedules: [
+      { id: 1, doctor_id: 2, working_date: todayStr(), start_time: '09:00', end_time: '17:00' },
+      { id: 2, doctor_id: 3, working_date: todayStr(), start_time: '08:00', end_time: '16:00' },
+    ],
+    inventory: [
+      { id: 1, item_name: 'Paracetamol 500mg', quantity: 500, category: 'Medicine' },
+      { id: 2, item_name: 'Amoxicillin 250mg', quantity: 300, category: 'Medicine' },
+      { id: 3, item_name: 'Cough Syrup', quantity: 150, category: 'Medicine' },
+      { id: 4, item_name: 'Stethoscope', quantity: 10, category: 'Equipment' },
+      { id: 5, item_name: 'Blood Pressure Monitor', quantity: 5, category: 'Equipment' },
+      { id: 6, item_name: 'Thermometer', quantity: 20, category: 'Equipment' },
+    ],
+    settings: {
+      clinic_name: 'UPNM Health Clinic',
+      opening_hours: '8:00 AM - 5:00 PM (Mon-Fri)',
+      contact: 'health@upnm.edu.my | +603-5550-1234',
+      address: 'Kem Sungai Besi, 57000 Kuala Lumpur, Malaysia'
+    },
+    nextId: { users: 7, appointments: 6, medical_records: 3, prescriptions: 3, medical_certificates: 2, announcements: 4, doctor_schedules: 3, inventory: 7 }
+  };
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+}
+
+function getDB() { return JSON.parse(localStorage.getItem(DB_KEY)); }
+function saveDB(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+function todayStr() {
+  const d = new Date();
+  return d.toISOString().split('T')[0];
+}
+
+// ---------- Session ----------
+function getSession() { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }
+function setSession(u) { localStorage.setItem(SESSION_KEY, JSON.stringify(u)); }
+function clearSession() { localStorage.removeItem(SESSION_KEY); }
+
+// ---------- Helpers ----------
+function $(id) { return document.getElementById(id); }
+function showAlert(id, msg, type='error') {
+  $(id).innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(() => { if($(id)) $(id).innerHTML = ''; }, 4000);
+}
+function openModal(html) { $('modalBody').innerHTML = html; $('modal').classList.add('active'); }
+function closeModal() { $('modal').classList.remove('active'); }
+$('modal')?.addEventListener('click', e => { if(e.target.id==='modal') closeModal(); });
+
+function formatDate(d) {
+  if(!d) return '-';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('en-MY', { year:'numeric', month:'short', day:'numeric' });
+}
+
+function roleLabel(role) {
+  return {student:'Student',lecturer:'Lecturer',doctor:'Doctor',admin:'Admin'}[role] || role;
+}
+function roleColor(role) {
+  return {student:'badge-pending',lecturer:'badge-confirmed',doctor:'badge-completed',admin:'badge-cancelled'}[role] || '';
+}
+
+// ---------- Menu Config ----------
+const MENUS = {
+  patient: [
+    { id: 'dashboard', icon: '🏠', label: 'Dashboard' },
+    { id: 'appointments', icon: '📅', label: 'My Appointments' },
+    { id: 'book', icon: '➕', label: 'Book Appointment' },
+    { id: 'records', icon: '📋', label: 'Medical Records' },
+    { id: 'prescriptions', icon: '💊', label: 'Prescriptions' },
+    { id: 'mc', icon: '📄', label: 'Medical Certificates' },
+    { id: 'queue', icon: '🔢', label: 'Queue Status' },
+    { id: 'announcements', icon: '📢', label: 'Announcements' },
+  ],
+  doctor: [
+    { id: 'dashboard', icon: '🏠', label: 'Dashboard' },
+    { id: 'queue', icon: '🔢', label: "Today's Queue" },
+    { id: 'appointments', icon: '📅', label: 'Appointments' },
+    { id: 'records', icon: '📋', label: 'Patient Records' },
+    { id: 'prescriptions', icon: '💊', label: 'Prescriptions' },
+    { id: 'mc', icon: '📄', label: 'Medical Certificates' },
+    { id: 'schedule', icon: '⏰', label: 'My Schedule' },
+    { id: 'announcements', icon: '📢', label: 'Announcements' },
+  ],
+  admin: [
+    { id: 'dashboard', icon: '🏠', label: 'Dashboard' },
+    { id: 'users', icon: '👥', label: 'User Management' },
+    { id: 'appointments', icon: '📅', label: 'Appointments' },
+    { id: 'doctors', icon: '👨‍⚕️', label: 'Doctor Schedules' },
+    { id: 'inventory', icon: '📦', label: 'Inventory' },
+    { id: 'announcements', icon: '📢', label: 'Announcements' },
+    { id: 'reports', icon: '📊', label: 'Reports & Analytics' },
+    { id: 'settings', icon: '⚙️', label: 'Clinic Settings' },
+  ]
+};
+
+let currentUser = null;
+let currentView = 'dashboard';
+
+// ---------- Auth ----------
+function showLogin() {
+  $('loginPage').classList.remove('hidden');
+  $('registerPage').classList.add('hidden');
+  $('dashboardLayout').classList.add('hidden');
+}
+function showRegister() {
+  $('registerPage').classList.remove('hidden');
+  $('loginPage').classList.add('hidden');
+  $('dashboardLayout').classList.add('hidden');
+}
+
+$('loginForm')?.addEventListener('submit', e => {
+  e.preventDefault();
+  const email = $('loginEmail').value.trim();
+  const pass = $('loginPassword').value;
+  const db = getDB();
+  const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === btoa(unescape(encodeURIComponent(pass))));
+  if(!user) { showAlert('loginAlert','Invalid email or password'); return; }
+  setSession({ id: user.id, role: user.role, name: user.name, email: user.email });
+  loadDashboard();
+});
+
+$('registerForm')?.addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $('regName').value.trim();
+  const email = $('regEmail').value.trim();
+  const role = $('regRole').value;
+  const pass = $('regPassword').value;
+  const confirm = $('regConfirm').value;
+  if(pass.length < 6) { showAlert('registerAlert','Password must be at least 6 characters'); return; }
+  if(pass !== confirm) { showAlert('registerAlert','Passwords do not match'); return; }
+  const db = getDB();
+  if(db.users.some(u => u.email.toLowerCase() === email.toLowerCase())) { showAlert('registerAlert','Email already registered'); return; }
+  const newUser = {
+    id: db.nextId.users++,
+    name, email, password: btoa(unescape(encodeURIComponent(pass))),
+    role, created_at: todayStr()
+  };
+  db.users.push(newUser);
+  saveDB(db);
+  showAlert('registerAlert','Account created successfully! Please sign in.','success');
+  setTimeout(showLogin, 1500);
+});
+
+function logout() {
+  clearSession();
+  currentUser = null;
+  showLogin();
+}
+
+// ---------- Dashboard ----------
+function loadDashboard() {
+  const s = getSession();
+  if(!s) { showLogin(); return; }
+  currentUser = s;
+  $('loginPage').classList.add('hidden');
+  $('registerPage').classList.add('hidden');
+  $('dashboardLayout').classList.remove('hidden');
+
+  $('userName').textContent = currentUser.name;
+  $('userRole').textContent = roleLabel(currentUser.role);
+  $('userAvatar').textContent = currentUser.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+
+  renderMenu();
+  navigate('dashboard');
+}
+
+function renderMenu() {
+  const menu = MENUS[currentUser.role] || [];
+  $('sidebarMenu').innerHTML = menu.map(m =>
+    `<div class="menu-item ${currentView===m.id?'active':''}" onclick="navigate('${m.id}')">
+       <span class="icon">${m.icon}</span><span>${m.label}</span>
+     </div>`
+  ).join('');
+}
+
+function toggleSidebar() { $('sidebar').classList.toggle('open'); }
+
+function navigate(view) {
+  currentView = view;
+  renderMenu();
+  const titles = {
+    dashboard:'Dashboard', appointments:'Appointments', book:'Book Appointment',
+    records:'Medical Records', prescriptions:'Prescriptions', mc:'Medical Certificates',
+    queue:'Queue Status', announcements:'Announcements', users:'User Management',
+    doctors:'Doctor Schedules', inventory:'Inventory', reports:'Reports & Analytics',
+    settings:'Clinic Settings', schedule:'My Schedule'
+  };
+  $('pageTitle').textContent = titles[view] || 'Dashboard';
+  $('sidebar').classList.remove('open');
+
+  const role = currentUser.role;
+  if(view === 'dashboard') renderDashboard();
+  else if(view === 'appointments') renderAppointments();
+  else if(view === 'book') renderBookAppointment();
+  else if(view === 'records') renderRecords();
+  else if(view === 'prescriptions') renderPrescriptions();
+  else if(view === 'mc') renderMC();
+  else if(view === 'queue') renderQueue();
+  else if(view === 'announcements') renderAnnouncements();
+  else if(view === 'users') renderUsers();
+  else if(view === 'doctors') renderDoctors();
+  else if(view === 'schedule') renderMySchedule();
+  else if(view === 'inventory') renderInventory();
+  else if(view === 'reports') renderReports();
+  else if(view === 'settings') renderSettings();
+}
+
+// ---------- PATIENT DASHBOARD ----------
+function renderDashboard() {
+  const db = getDB();
+  const role = currentUser.role;
+  let html = '';
+
+  if(role === 'patient' || role === 'student' || role === 'lecturer') {
+    const myAppts = db.appointments.filter(a => a.patient_id === currentUser.id);
+    const upcoming = myAppts.find(a => a.status === 'confirmed' && a.date >= todayStr());
+    const queue = myAppts.find(a => a.status === 'confirmed' && a.date === todayStr());
+    const activeRx = db.prescriptions.filter(p => p.patient_id === currentUser.id).length;
+    const recCount = db.medical_records.filter(r => r.patient_id === currentUser.id).length;
+
+    html = `<div class="stats-grid">
+      <div class="stat-card"><div class="stat-info"><div class="label">Upcoming Appointment</div><div class="value">${upcoming ? '📅' : '—'}</div><div style="font-size:12px;color:var(--muted);margin-top:4px">${upcoming ? formatDate(upcoming.date)+' '+upcoming.time : 'None scheduled'}</div></div><div class="stat-icon">📅</div></div>
+      <div class="stat-card green"><div class="stat-info"><div class="label">Queue Status</div><div class="value">${queue ? '#'+queue.queue_number : '—'}</div><div style="font-size:12px;color:var(--muted);margin-top:4px">${queue ? 'In queue' : 'No active queue'}</div></div><div class="stat-icon">🔢</div></div>
+      <div class="stat-card orange"><div class="stat-info"><div class="label">Active Prescriptions</div><div class="value">${activeRx}</div><div style="font-size:12px;color:var(--muted);margin-top:4px">Total issued</div></div><div class="stat-icon">💊</div></div>
+      <div class="stat-card red"><div class="stat-info"><div class="label">Medical Records</div><div class="value">${recCount}</div><div style="font-size:12px;color:var(--muted);margin-top:4px">Total records</div></div><div class="stat-icon">📋</div></div>
+    </div>`;
+
+    // Queue display
+    if(queue) {
+      const doctor = db.users.find(u => u.id === queue.doctor_id);
+      html += `<div class="queue-container">
+        <div class="label">Your Queue Number</div>
+        <div class="queue-number">#${queue.queue_number}</div>
+        <div class="queue-info">Doctor: ${doctor?.name || '—'} | Time: ${queue.time}</div>
+      </div>`;
+    }
+
+    html += renderAnnouncementsList(db.announcements.slice().reverse().slice(0,3), false);
+
+    // Recent Appointments
+    const recent = myAppts.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+    html += `<div class="card"><div class="card-header"><h3>Recent Appointments</h3><button class="btn btn-sm btn-primary" onclick="navigate('appointments')">View All</button></div>${renderApptTable(recent, 'patient')}</div>`;
+  }
+  else if(role === 'doctor') {
+    const today = todayStr();
+    const todayAppts = db.appointments.filter(a => a.doctor_id === currentUser.id && a.date === today);
+    const waiting = todayAppts.filter(a => a.status === 'confirmed' || a.status === 'pending').length;
+    const rxCount = db.prescriptions.filter(p => p.doctor_id === currentUser.id).length;
+    const mcCount = db.medical_certificates.filter(m => m.doctor_id === currentUser.id).length;
+
+    html = `<div class="stats-grid">
+      <div class="stat-card"><div class="stat-info"><div class="label">Today's Appointments</div><div class="value">${todayAppts.length}</div></div><div class="stat-icon">📅</div></div>
+      <div class="stat-card green"><div class="stat-info"><div class="label">Patients Waiting</div><div class="value">${waiting}</div></div><div class="stat-icon">⏳</div></div>
+      <div class="stat-card orange"><div class="stat-info"><div class="label">Prescriptions Issued</div><div class="value">${rxCount}</div></div><div class="stat-icon">💊</div></div>
+      <div class="stat-card red"><div class="stat-info"><div class="label">MC Issued</div><div class="value">${mcCount}</div></div><div class="stat-icon">📄</div></div>
+    </div>`;
+
+    // Today's queue
+    const queueList = todayAppts.filter(a => a.status === 'confirmed' || a.status === 'pending').sort((a,b)=>a.queue_number-b.queue_number);
+    html += `<div class="card"><div class="card-header"><h3>Today's Queue</h3></div>
+      ${queueList.length===0 ? '<div class="empty-state"><p>No patients in queue</p></div>' :
+      `<div class="table-wrap"><table><thead><tr><th>#</th><th>Patient</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+      ${queueList.map(q=>{
+        const p = db.users.find(u=>u.id===q.patient_id);
+        return `<tr><td><strong>#${q.queue_number}</strong></td><td>${p?.name||'—'}</td><td>${q.time}</td>
+        <td><span class="badge badge-${q.status}">${q.status}</span></td>
+        <td><div class="row-actions"><button class="btn btn-sm btn-primary" onclick="startConsultation(${q.id})">Start</button></div></td></tr>`;
+      }).join('')}</tbody></table></div>`}
+    </div>`;
+
+    html += renderAnnouncementsList(db.announcements.slice().reverse().slice(0,3), false);
+  }
+  else if(role === 'admin') {
+    const totalUsers = db.users.length;
+    const patients = db.users.filter(u => u.role==='student'||u.role==='lecturer').length;
+    const totalAppts = db.appointments.length;
+    const doctors = db.users.filter(u => u.role==='doctor').length;
+
+    html = `<div class="stats-grid">
+      <div class="stat-card"><div class="stat-info"><div class="label">Total Users</div><div class="value">${totalUsers}</div></div><div class="stat-icon">👥</div></div>
+      <div class="stat-card green"><div class="stat-info"><div class="label">Total Patients</div><div class="value">${patients}</div></div><div class="stat-icon">🧑‍⚕️</div></div>
+      <div class="stat-card orange"><div class="stat-info"><div class="label">Total Appointments</div><div class="value">${totalAppts}</div></div><div class="stat-icon">📅</div></div>
+      <div class="stat-card red"><div class="stat-info"><div class="label">Total Doctors</div><div class="value">${doctors}</div></div><div class="stat-icon">👨‍⚕️</div></div>
+    </div>`;
+
+    // Recent activity
+    const recentAppts = db.appointments.slice().sort((a,b)=>b.id-a.id).slice(0,5);
+    html += `<div class="card"><div class="card-header"><h3>Recent Appointments</h3><button class="btn btn-sm btn-primary" onclick="navigate('appointments')">View All</button></div>${renderApptTable(recentAppts, 'admin')}</div>`;
+
+    // Inventory alerts
+    const lowStock = db.inventory.filter(i => i.quantity < 50);
+    if(lowStock.length) {
+      html += `<div class="card"><div class="card-header"><h3>⚠️ Low Stock Alert</h3></div>
+        <div class="table-wrap"><table><thead><tr><th>Item</th><th>Category</th><th>Quantity</th></tr></thead><tbody>
+        ${lowStock.map(i=>`<tr><td>${i.item_name}</td><td>${i.category}</td><td><span class="badge badge-cancelled">${i.quantity} left</span></td></tr>`).join('')}
+        </tbody></table></div></div>`;
+    }
+  }
+
+  $('content').innerHTML = html;
+}
+
+// ---------- Appointments ----------
+function renderAppointments() {
+  const db = getDB();
+  let list = [];
+  let isAdmin = currentUser.role === 'admin';
+  let isDoctor = currentUser.role === 'doctor';
+
+  if(isAdmin) list = db.appointments.slice().sort((a,b)=>b.id-a.id);
+  else if(isDoctor) list = db.appointments.filter(a=>a.doctor_id===currentUser.id).sort((a,b)=>b.id-a.id);
+  else list = db.appointments.filter(a=>a.patient_id===currentUser.id).sort((a,b)=>b.id-a.id);
+
+  $('content').innerHTML = `<div class="card">
+    <div class="card-header">
+      <h3>Appointments (${list.length})</h3>
+      ${!isAdmin && !isDoctor ? '<button class="btn btn-primary btn-sm" onclick="navigate(\'book\')">+ Book New</button>' : ''}
+    </div>
+    ${renderApptTable(list, currentUser.role)}
+  </div>`;
+}
+
+function renderApptTable(list, role) {
+  if(!list.length) return '<div class="empty-state"><p>No appointments found</p></div>';
+  const db = getDB();
+  const isPatient = role==='patient'||role==='student'||role==='lecturer';
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Queue</th>
+    ${!isPatient ? '<th>Patient</th>' : ''}
+    <th>Doctor</th>
+    <th>Status</th><th>Actions</th></tr></thead>
+    <tbody>
+    ${list.map(a=>{
+      const p = db.users.find(u=>u.id===a.patient_id);
+      const d = db.users.find(u=>u.id===a.doctor_id);
+      let actions = '';
+      if(role==='patient'||role==='student'||role==='lecturer') {
+        if(a.status==='confirmed' || a.status==='pending') {
+          actions = `<button class="btn btn-sm btn-warning" onclick="rescheduleAppt(${a.id})">Reschedule</button>
+                     <button class="btn btn-sm btn-danger" onclick="cancelAppt(${a.id})">Cancel</button>`;
+        }
+      } else if(role==='doctor') {
+        if(a.status==='confirmed'||a.status==='pending')
+          actions = `<button class="btn btn-sm btn-primary" onclick="startConsultation(${a.id})">Consult</button>`;
+        else if(a.status==='in-progress')
+          actions = `<button class="btn btn-sm btn-success" onclick="completeAppt(${a.id})">Complete</button>`;
+        else
+          actions = `<span class="badge badge-${a.status}">${a.status}</span>`;
+      } else if(role==='admin') {
+        actions = `<button class="btn btn-sm btn-warning" onclick="editAppt(${a.id})">Edit</button>
+                   ${a.status!=='completed' ? `<button class="btn btn-sm btn-danger" onclick="cancelAppt(${a.id})">Cancel</button>` : ''}`;
+      }
+      return `<tr>
+        <td>#${a.id}</td><td>${formatDate(a.date)}</td><td>${a.time}</td>
+        <td>${a.queue_number||'—'}</td>
+        ${!isPatient ? `<td>${p?.name||'—'}</td>` : ''}
+        <td>${d?.name||'—'}</td>
+        <td><span class="badge badge-${a.status}">${a.status}</span></td>
+        <td><div class="row-actions">${actions}</div></td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div>`;
+}
+
+// ---------- Book Appointment ----------
+function renderBookAppointment() {
+  const db = getDB();
+  const doctors = db.users.filter(u => u.role==='doctor');
+  $('content').innerHTML = `<div class="card">
+    <div class="card-header"><h3>Book New Appointment</h3></div>
+    <form id="bookForm" onsubmit="bookAppointment(event)">
+      <div class="grid-form">
+        <div class="form-group"><label>Doctor</label>
+          <select id="bkDoctor" required>
+            <option value="">Select Doctor</option>
+            ${doctors.map(d=>`<option value="${d.id}">${d.name} ${d.speciality?'('+d.speciality+')':''}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label>Date</label><input type="date" id="bkDate" min="${todayStr()}" required></div>
+        <div class="form-group"><label>Time</label><input type="time" id="bkTime" required></div>
+        <div class="form-group"><label>Reason / Notes</label><input type="text" id="bkNotes" placeholder="Brief reason for visit"></div>
+      </div>
+      <button type="submit" class="btn btn-primary">Book Appointment</button>
+    </form>
+  </div>`;
+}
+
+function bookAppointment(e) {
+  e.preventDefault();
+  const db = getDB();
+  const doctorId = +$('bkDoctor').value;
+  const date = $('bkDate').value;
+  const time = $('bkTime').value;
+  const notes = $('bkNotes').value;
+  const maxQ = Math.max(0, ...db.appointments.filter(a=>a.doctor_id===doctorId&&a.date===date).map(a=>a.queue_number||0));
+  const newAppt = {
+    id: db.nextId.appointments++,
+    patient_id: currentUser.id, doctor_id: doctorId,
+    date, time, status: 'pending', notes,
+    queue_number: maxQ + 1,
+    created_at: todayStr()
+  };
+  db.appointments.push(newAppt);
+  saveDB(db);
+  openModal(`<h3>✅ Appointment Booked</h3>
+    <p>Your appointment has been booked successfully.</p>
+    <div style="margin:16px 0;padding:16px;background:var(--primary-light);border-radius:8px">
+      <p><strong>Appointment ID:</strong> #${newAppt.id}</p>
+      <p><strong>Queue Number:</strong> #${newAppt.queue_number}</p>
+      <p><strong>Date:</strong> ${formatDate(date)}</p>
+      <p><strong>Time:</strong> ${time}</p>
+    </div>
+    <div class="modal-actions"><button class="btn btn-primary" onclick="closeModal();navigate('appointments')">OK</button></div>`);
+}
+
+function cancelAppt(id) {
+  if(!confirm('Are you sure you want to cancel this appointment?')) return;
+  const db = getDB();
+  const a = db.appointments.find(x=>x.id===id);
+  if(a) { a.status = 'cancelled'; saveDB(db); navigate('appointments'); }
+}
+
+function rescheduleAppt(id) {
+  const db = getDB();
+  const a = db.appointments.find(x=>x.id===id);
+  if(!a) return;
+  openModal(`<h3>Reschedule Appointment #${a.id}</h3>
+    <form onsubmit="doReschedule(event,${id})">
+      <div class="form-group"><label>New Date</label><input type="date" id="rsDate" min="${todayStr()}" value="${a.date}" required></div>
+      <div class="form-group"><label>New Time</label><input type="time" id="rsTime" value="${a.time}" required></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Reschedule</button>
+      </div>
+    </form>`);
+}
+function doReschedule(e,id) {
+  e.preventDefault();
+  const db = getDB();
+  const a = db.appointments.find(x=>x.id===id);
+  a.date = $('rsDate').value; a.time = $('rsTime').value; a.status='pending';
+  saveDB(db); closeModal(); navigate('appointments');
+}
+
+function editAppt(id) {
+  const db = getDB();
+  const a = db.appointments.find(x=>x.id===id);
+  if(!a) return;
+  const patients = db.users.filter(u=>u.role==='student'||u.role==='lecturer');
+  const doctors = db.users.filter(u=>u.role==='doctor');
+  openModal(`<h3>Edit Appointment #${a.id}</h3>
+    <form onsubmit="doEditAppt(event,${id})">
+      <div class="form-group"><label>Patient</label>
+        <select id="eaPatient" required>${patients.map(p=>`<option value="${p.id}" ${p.id===a.patient_id?'selected':''}>${p.name}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>Doctor</label>
+        <select id="eaDoctor" required>${doctors.map(d=>`<option value="${d.id}" ${d.id===a.doctor_id?'selected':''}>${d.name}</option>`).join('')}</select>
+      </div>
+      <div class="grid-form">
+        <div class="form-group"><label>Date</label><input type="date" id="eaDate" value="${a.date}" required></div>
+        <div class="form-group"><label>Time</label><input type="time" id="eaTime" value="${a.time}" required></div>
+        <div class="form-group"><label>Status</label>
+          <select id="eaStatus">
+            ${['pending','confirmed','in-progress','completed','cancelled'].map(s=>`<option value="${s}" ${s===a.status?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group"><label>Queue #</label><input type="number" id="eaQueue" value="${a.queue_number||1}" min="1"></div>
+      </div>
+      <div class="form-group"><label>Notes</label><input type="text" id="eaNotes" value="${a.notes||''}"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>`);
+}
+function doEditAppt(e,id) {
+  e.preventDefault();
+  const db = getDB();
+  const a = db.appointments.find(x=>x.id===id);
+  a.patient_id = +$('eaPatient').value;
+  a.doctor_id = +$('eaDoctor').value;
+  a.date = $('eaDate').value;
+  a.time = $('eaTime').value;
+  a.status = $('eaStatus').value;
+  a.queue_number = +$('eaQueue').value;
+  a.notes = $('eaNotes').value;
+  saveDB(db); closeModal(); navigate('appointments');
+}
+
+function startConsultation(id) {
+  const db = getDB();
+  const a = db.appointments.find(x=>x.id===id);
+  if(!a) return;
+  a.status = 'in-progress';
+  saveDB(db);
+  const p = db.users.find(u=>u.id===a.patient_id);
+  openModal(`<h3>Consultation - ${p?.name}</h3>
+    <form onsubmit="saveConsultation(event,${id})">
+      <div class="form-group"><label>Diagnosis</label><input type="text" id="cDiagnosis" required placeholder="e.g. Common Cold"></div>
+      <div class="form-group"><label>Consultation Notes</label><textarea id="cNotes" rows="3" placeholder="Detailed notes"></textarea></div>
+      <hr style="margin:14px 0;border:none;border-top:1px solid var(--border)">
+      <h4 style="color:var(--primary);margin-bottom:10px">Prescription (optional)</h4>
+      <div class="grid-form">
+        <div class="form-group"><label>Medicine</label><input type="text" id="cMed" placeholder="e.g. Paracetamol 500mg"></div>
+        <div class="form-group"><label>Dosage</label><input type="text" id="cDosage" placeholder="e.g. 1 tablet 3x daily"></div>
+        <div class="form-group full"><label>Instructions</label><input type="text" id="cInstr" placeholder="Additional instructions"></div>
+      </div>
+      <hr style="margin:14px 0;border:none;border-top:1px solid var(--border)">
+      <h4 style="color:var(--primary);margin-bottom:10px">Medical Certificate (optional)</h4>
+      <div class="grid-form">
+        <div class="form-group"><label>Duration (days)</label><input type="number" id="cDuration" min="1" max="14"></div>
+        <div class="form-group full"><label>Remarks</label><input type="text" id="cRemarks" placeholder="MC remarks"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save & Complete</button>
+      </div>
+    </form>`);
+}
+
+function saveConsultation(e,id) {
+  e.preventDefault();
+  const db = getDB();
+  const a = db.appointments.find(x=>x.id===id);
+  const diagnosis = $('cDiagnosis').value;
+  const notes = $('cNotes').value;
+  const med = $('cMed').value;
+  const dosage = $('cDosage').value;
+  const instr = $('cInstr').value;
+  const dur = $('cDuration').value;
+  const rem = $('cRemarks').value;
+
+  // Add medical record
+  db.medical_records.push({
+    id: db.nextId.medical_records++,
+    patient_id: a.patient_id, doctor_id: currentUser.id,
+    diagnosis, notes, created_at: todayStr()
+  });
+
+  // Prescription
+  if(med && dosage) {
+    db.prescriptions.push({
+      id: db.nextId.prescriptions++,
+      patient_id: a.patient_id, doctor_id: currentUser.id,
+      medicine: med, dosage, instructions: instr,
+      appointment_id: id, created_at: todayStr()
+    });
+  }
+
+  // MC
+  if(dur) {
+    db.medical_certificates.push({
+      id: db.nextId.medical_certificates++,
+      patient_id: a.patient_id, doctor_id: currentUser.id,
+      issue_date: todayStr(), duration: +dur, remarks: rem,
+      created_at: todayStr()
+    });
+  }
+
+  a.status = 'completed';
+  saveDB(db); closeModal(); navigate('appointments');
+}
+
+function completeAppt(id) {
+  const db = getDB();
+  const a = db.appointments.find(x=>x.id===id);
+  a.status = 'completed';
+  saveDB(db); navigate('appointments');
+}
+
+// ---------- Medical Records ----------
+function renderRecords() {
+  const db = getDB();
+  let records = [];
+  if(currentUser.role==='doctor' || currentUser.role==='admin') {
+    records = db.medical_records.slice().sort((a,b)=>b.id-a.id);
+  } else {
+    records = db.medical_records.filter(r=>r.patient_id===currentUser.id).sort((a,b)=>b.id-a.id);
+  }
+  $('content').innerHTML = `<div class="card">
+    <div class="card-header"><h3>Medical Records (${records.length})</h3></div>
+    ${!records.length ? '<div class="empty-state"><p>No medical records found</p></div>' :
+    `<div class="table-wrap"><table><thead><tr>
+      ${currentUser.role==='admin'||currentUser.role==='doctor' ? '<th>Patient</th>' : ''}
+      <th>Date</th><th>Diagnosis</th><th>Notes</th><th>Doctor</th>
+    </tr></thead><tbody>
+    ${records.map(r=>{
+      const p = db.users.find(u=>u.id===r.patient_id);
+      const d = db.users.find(u=>u.id===r.doctor_id);
+      return `<tr>
+        ${currentUser.role==='admin'||currentUser.role==='doctor' ? `<td>${p?.name||'—'}</td>` : ''}
+        <td>${formatDate(r.created_at)}</td>
+        <td><strong>${r.diagnosis}</strong></td>
+        <td>${r.notes||'—'}</td>
+        <td>${d?.name||'—'}</td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div>`}
+  </div>`;
+}
+
+// ---------- Prescriptions ----------
+function renderPrescriptions() {
+  const db = getDB();
+  let rx = [];
+  if(currentUser.role==='doctor' || currentUser.role==='admin') {
+    rx = db.prescriptions.slice().sort((a,b)=>b.id-a.id);
+  } else {
+    rx = db.prescriptions.filter(p=>p.patient_id===currentUser.id).sort((a,b)=>b.id-a.id);
+  }
+  $('content').innerHTML = `<div class="card">
+    <div class="card-header"><h3>Prescriptions (${rx.length})</h3></div>
+    ${!rx.length ? '<div class="empty-state"><p>No prescriptions found</p></div>' :
+    `<div class="table-wrap"><table><thead><tr>
+      ${currentUser.role!=='patient'&&currentUser.role!=='student'&&currentUser.role!=='lecturer' ? '<th>Patient</th>' : ''}
+      <th>Date</th><th>Medicine</th><th>Dosage</th><th>Instructions</th><th>Doctor</th>
+    </tr></thead><tbody>
+    ${rx.map(r=>{
+      const p = db.users.find(u=>u.id===r.patient_id);
+      const d = db.users.find(u=>u.id===r.doctor_id);
+      return `<tr>
+        ${currentUser.role!=='patient'&&currentUser.role!=='student'&&currentUser.role!=='lecturer' ? `<td>${p?.name||'—'}</td>` : ''}
+        <td>${formatDate(r.created_at)}</td>
+        <td><strong>${r.medicine}</strong></td>
+        <td>${r.dosage}</td>
+        <td>${r.instructions||'—'}</td>
+        <td>${d?.name||'—'}</td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div>`}
+  </div>`;
+}
+
+// ---------- Medical Certificates ----------
+function renderMC() {
+  const db = getDB();
+  let mc = [];
+  if(currentUser.role==='doctor' || currentUser.role==='admin') {
+    mc = db.medical_certificates.slice().sort((a,b)=>b.id-a.id);
+  } else {
+    mc = db.medical_certificates.filter(m=>m.patient_id===currentUser.id).sort((a,b)=>b.id-a.id);
+  }
+  $('content').innerHTML = `<div class="card">
+    <div class="card-header"><h3>Medical Certificates (${mc.length})</h3></div>
+    ${!mc.length ? '<div class="empty-state"><p>No medical certificates found</p></div>' :
+    `<div class="table-wrap"><table><thead><tr>
+      ${currentUser.role!=='patient'&&currentUser.role!=='student'&&currentUser.role!=='lecturer' ? '<th>Patient</th>' : ''}
+      <th>MC ID</th><th>Issue Date</th><th>Duration</th><th>Remarks</th><th>Doctor</th><th>Actions</th>
+    </tr></thead><tbody>
+    ${mc.map(r=>{
+      const p = db.users.find(u=>u.id===r.patient_id);
+      const d = db.users.find(u=>u.id===r.doctor_id);
+      return `<tr>
+        ${currentUser.role!=='patient'&&currentUser.role!=='student'&&currentUser.role!=='lecturer' ? `<td>${p?.name||'—'}</td>` : ''}
+        <td>#MC${String(r.id).padStart(4,'0')}</td>
+        <td>${formatDate(r.issue_date)}</td>
+        <td><span class="badge badge-confirmed">${r.duration} day(s)</span></td>
+        <td>${r.remarks||'—'}</td>
+        <td>${d?.name||'—'}</td>
+        <td><button class="btn btn-sm btn-primary" onclick="downloadMC(${r.id})">Download PDF</button></td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div>`}
+  </div>`;
+}
+
+function downloadMC(id) {
+  const db = getDB();
+  const mc = db.medical_certificates.find(m=>m.id===id);
+  const p = db.users.find(u=>u.id===mc.patient_id);
+  const d = db.users.find(u=>u.id===mc.doctor_id);
+  const settings = db.settings;
+  const html = `<div style="font-family:Arial,sans-serif;padding:40px;max-width:700px;margin:auto;border:2px solid #1e5bb4;border-radius:12px">
+    <div style="text-align:center;border-bottom:2px solid #1e5bb4;padding-bottom:20px">
+      <h1 style="color:#1e5bb4;margin:0">${settings.clinic_name}</h1>
+      <p style="color:#666;margin:4px 0">${settings.address}</p>
+      <p style="color:#666;margin:0">${settings.contact}</p>
+    </div>
+    <h2 style="text-align:center;color:#1e5bb4;margin:30px 0">MEDICAL CERTIFICATE</h2>
+    <p><strong>MC Number:</strong> #MC${String(mc.id).padStart(4,'0')}</p>
+    <p><strong>Date Issued:</strong> ${formatDate(mc.issue_date)}</p>
+    <p><strong>Patient Name:</strong> ${p?.name||'—'}</p>
+    <p>This is to certify that the above-named patient is unfit for work/study for a period of <strong>${mc.duration} day(s)</strong> from ${formatDate(mc.issue_date)}.</p>
+    <p><strong>Remarks:</strong> ${mc.remarks||'—'}</p>
+    <div style="margin-top:60px;text-align:right">
+      <p>__________________________</p>
+      <p><strong>${d?.name||'—'}</strong></p>
+      <p style="color:#666">Medical Officer</p>
+    </div>
+    <div style="margin-top:40px;text-align:center;color:#999;font-size:11px">
+      <p>This is a computer-generated certificate.</p>
+    </div>
+  </div>`;
+  const w = window.open('','_blank');
+  w.document.write(html);
+  w.document.title = `MC_#MC${String(mc.id).padStart(4,'0')}`;
+  setTimeout(()=>w.print(), 300);
+}
+
+// ---------- Queue ----------
+function renderQueue() {
+  const db = getDB();
+  const today = todayStr();
+  let queue = [];
+  if(currentUser.role==='doctor') {
+    queue = db.appointments.filter(a=>a.doctor_id===currentUser.id && a.date===today && (a.status==='confirmed'||a.status==='pending'||a.status==='in-progress'))
+      .sort((a,b)=>a.queue_number-b.queue_number);
+  } else {
+    queue = db.appointments.filter(a=>a.patient_id===currentUser.id && a.date===today && (a.status==='confirmed'||a.status==='pending'))
+      .sort((a,b)=>a.queue_number-b.queue_number);
+  }
+  const myQ = queue[0];
+  const doctor = myQ ? db.users.find(u=>u.id===myQ.doctor_id) : null;
+
+  let callBtn = '';
+  if(currentUser.role==='doctor' && queue.length) {
+    callBtn = `<button class="btn btn-success" style="margin-top:16px" onclick="callNextPatient()">🔔 Call Next Patient</button>`;
+  }
+
+  $('content').innerHTML = `<div class="queue-container">
+    <div class="label">Today's Queue — ${formatDate(today)}</div>
+    ${myQ ? `<div class="queue-number">#${myQ.queue_number}</div>
+            <div class="queue-info">Doctor: ${doctor?.name||'—'} | Time: ${myQ.time}</div>
+            <div class="queue-info" style="margin-top:8px">Patients ahead: ${Math.max(0,myQ.queue_number-1)}</div>` :
+            `<div class="queue-number" style="font-size:36px">No active queue</div>
+             <div class="queue-info">You have no appointments today</div>`}
+    ${callBtn}
+  </div>
+  <div class="card"><div class="card-header"><h3>Full Queue (${queue.length})</h3></div>
+    ${queue.length===0 ? '<div class="empty-state"><p>No queue entries</p></div>' :
+    `<div class="table-wrap"><table><thead><tr><th>#</th><th>${currentUser.role==='doctor'?'Patient':'Doctor'}</th><th>Time</th><th>Status</th></tr></thead><tbody>
+    ${queue.map(q=>{
+      const u = db.users.find(x=>x.id===(currentUser.role==='doctor'?q.patient_id:q.doctor_id));
+      return `<tr><td><strong>#${q.queue_number}</strong></td><td>${u?.name||'—'}</td><td>${q.time}</td><td><span class="badge badge-${q.status}">${q.status}</span></td></tr>`;
+    }).join('')}
+    </tbody></table></div>`}
+  </div>`;
+}
+
+function callNextPatient() {
+  const db = getDB();
+  const today = todayStr();
+  const next = db.appointments
+    .filter(a=>a.doctor_id===currentUser.id && a.date===today && (a.status==='confirmed'||a.status==='pending'))
+    .sort((a,b)=>a.queue_number-b.queue_number)[0];
+  if(!next) { alert('No patients in queue'); return; }
+  next.status = 'in-progress';
+  saveDB(db);
+  const p = db.users.find(u=>u.id===next.patient_id);
+  openModal(`<h3>🔔 Calling Next Patient</h3>
+    <div style="text-align:center;padding:20px">
+      <div style="font-size:72px;color:var(--primary);font-weight:800">#${next.queue_number}</div>
+      <p style="font-size:18px;margin-top:10px">${p?.name||'—'}</p>
+      <p style="color:var(--muted)">Appointment at ${next.time}</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+      <button class="btn btn-primary" onclick="closeModal();startConsultation(${next.id})">Start Consultation</button>
+    </div>`);
+}
+
+// ---------- Announcements ----------
+function renderAnnouncements() {
+  const db = getDB();
+  $('content').innerHTML = `<div class="card">
+    <div class="card-header"><h3>Announcements</h3>
+      ${currentUser.role==='admin' ? '<button class="btn btn-primary btn-sm" onclick="addAnnouncement()">+ New Announcement</button>' : ''}
+    </div>
+    ${renderAnnouncementsList(db.announcements.slice().reverse(), currentUser.role==='admin')}
+  </div>`;
+}
+
+function renderAnnouncementsList(list, canEdit) {
+  if(!list.length) return '<div class="empty-state"><p>No announcements</p></div>';
+  return list.map(a=>`
+    <div class="announcement">
+      <h4>${a.title} ${canEdit?`<span style="float:right">
+        <button class="btn btn-sm btn-secondary" onclick="editAnnouncement(${a.id})">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteAnnouncement(${a.id})">Delete</button>
+      </span>`:''}</h4>
+      <p>${a.content}</p>
+      <div class="date">📅 ${formatDate(a.created_at)}</div>
+    </div>
+  `).join('');
+}
+
+function addAnnouncement() {
+  openModal(`<h3>New Announcement</h3>
+    <form onsubmit="saveAnnouncement(event)">
+      <div class="form-group"><label>Title</label><input type="text" id="annTitle" required></div>
+      <div class="form-group"><label>Content</label><textarea id="annContent" rows="4" required></textarea></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Publish</button>
+      </div>
+    </form>`);
+}
+function saveAnnouncement(e) {
+  e.preventDefault();
+  const db = getDB();
+  db.announcements.push({
+    id: db.nextId.announcements++,
+    title: $('annTitle').value, content: $('annContent').value,
+    created_at: todayStr()
+  });
+  saveDB(db); closeModal(); navigate('announcements');
+}
+function editAnnouncement(id) {
+  const db = getDB();
+  const a = db.announcements.find(x=>x.id===id);
+  openModal(`<h3>Edit Announcement</h3>
+    <form onsubmit="saveEditAnn(event,${id})">
+      <div class="form-group"><label>Title</label><input type="text" id="eAnnTitle" value="${a.title}" required></div>
+      <div class="form-group"><label>Content</label><textarea id="eAnnContent" rows="4" required>${a.content}</textarea></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Update</button>
+      </div>
+    </form>`);
+}
+function saveEditAnn(e,id) {
+  e.preventDefault();
+  const db = getDB();
+  const a = db.announcements.find(x=>x.id===id);
+  a.title = $('eAnnTitle').value; a.content = $('eAnnContent').value;
+  saveDB(db); closeModal(); navigate('announcements');
+}
+function deleteAnnouncement(id) {
+  if(!confirm('Delete this announcement?')) return;
+  const db = getDB();
+  db.announcements = db.announcements.filter(a=>a.id!==id);
+  saveDB(db); navigate('announcements');
+}
+
+// ---------- Users (Admin) ----------
+function renderUsers() {
+  if(currentUser.role !== 'admin') { $('content').innerHTML = '<div class="card"><p>Access denied</p></div>'; return; }
+  const db = getDB();
+  const users = db.users.slice().sort((a,b)=>a.id-b.id);
+  $('content').innerHTML = `<div class="card">
+    <div class="card-header"><h3>User Management (${users.length})</h3>
+      <button class="btn btn-primary btn-sm" onclick="addUser()">+ Create User</button>
+    </div>
+    <div class="table-wrap"><table><thead><tr>
+      <th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Created</th><th>Actions</th>
+    </tr></thead><tbody>
+    ${users.map(u=>`<tr>
+      <td>#${u.id}</td><td>${u.name}</td><td>${u.email}</td>
+      <td><span class="badge ${roleColor(u.role)}">${roleLabel(u.role)}</span></td>
+      <td>${formatDate(u.created_at)}</td>
+      <td><div class="row-actions">
+        ${u.id!==currentUser.id ? `<button class="btn btn-sm btn-warning" onclick="editUser(${u.id})">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">Delete</button>` : '<span class="badge badge-completed">Current User</span>'}
+      </div></td>
+    </tr>`).join('')}
+    </tbody></table></div>
+  </div>`;
+}
+
+function addUser() {
+  openModal(`<h3>Create User</h3>
+    <form onsubmit="saveUser(event)">
+      <div class="form-group"><label>Full Name</label><input type="text" id="uName" required></div>
+      <div class="form-group"><label>Email</label><input type="email" id="uEmail" required></div>
+      <div class="grid-form">
+        <div class="form-group"><label>Role</label>
+          <select id="uRole" required>
+            <option value="student">Student</option><option value="lecturer">Lecturer</option>
+            <option value="doctor">Doctor</option><option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Password</label><input type="password" id="uPass" minlength="6" required></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Create</button>
+      </div>
+    </form>`);
+}
+function saveUser(e) {
+  e.preventDefault();
+  const db = getDB();
+  if(db.users.some(u=>u.email.toLowerCase()===$('uEmail').value.toLowerCase())) { alert('Email already exists'); return; }
+  db.users.push({
+    id: db.nextId.users++, name: $('uName').value, email: $('uEmail').value,
+    password: btoa(unescape(encodeURIComponent($('uPass').value))),
+    role: $('uRole').value, created_at: todayStr()
+  });
+  saveDB(db); closeModal(); navigate('users');
+}
+function editUser(id) {
+  const db = getDB();
+  const u = db.users.find(x=>x.id===id);
+  openModal(`<h3>Edit User</h3>
+    <form onsubmit="saveEditUser(event,${id})">
+      <div class="form-group"><label>Full Name</label><input type="text" id="euName" value="${u.name}" required></div>
+      <div class="form-group"><label>Email</label><input type="email" id="euEmail" value="${u.email}" required></div>
+      <div class="form-group"><label>Role</label>
+        <select id="euRole">
+          ${['student','lecturer','doctor','admin'].map(r=>`<option value="${r}" ${r===u.role?'selected':''}>${roleLabel(r)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group"><label>New Password (leave blank to keep current)</label><input type="password" id="euPass"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>`);
+}
+function saveEditUser(e,id) {
+  e.preventDefault();
+  const db = getDB();
+  const u = db.users.find(x=>x.id===id);
+  u.name = $('euName').value; u.email = $('euEmail').value; u.role = $('euRole').value;
+  if($('euPass').value) u.password = btoa(unescape(encodeURIComponent($('euPass').value)));
+  saveDB(db); closeModal(); navigate('users');
+}
+function deleteUser(id) {
+  if(!confirm('Delete this user? This action cannot be undone.')) return;
+  const db = getDB();
+  db.users = db.users.filter(u=>u.id!==id);
+  saveDB(db); navigate('users');
+}
+
+// ---------- Doctor Schedules (Admin) ----------
+function renderDoctors() {
+  if(currentUser.role !== 'admin') { $('content').innerHTML = '<div class="card"><p>Access denied</p></div>'; return; }
+  const db = getDB();
+  const schedules = db.doctor_schedules.slice().sort((a,b)=>b.id-a.id);
+  $('content').innerHTML = `<div class="card">
+    <div class="card-header"><h3>Doctor Schedules (${schedules.length})</h3>
+      <button class="btn btn-primary btn-sm" onclick="addSchedule()">+ Create Schedule</button>
+    </div>
+    ${!schedules.length ? '<div class="empty-state"><p>No schedules</p></div>' :
+    `<div class="table-wrap"><table><thead><tr>
+      <th>ID</th><th>Doctor</th><th>Date</th><th>Start Time</th><th>End Time</th><th>Actions</th>
+    </tr></thead><tbody>
+    ${schedules.map(s=>{
+      const d = db.users.find(u=>u.id===s.doctor_id);
+      return `<tr><td>#${s.id}</td><td>${d?.name||'—'}</td><td>${formatDate(s.working_date)}</td>
+      <td>${s.start_time}</td><td>${s.end_time}</td>
+      <td><div class="row-actions">
+        <button class="btn btn-sm btn-warning" onclick="editSchedule(${s.id})">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteSchedule(${s.id})">Delete</button>
+      </div></td></tr>`;
+    }).join('')}
+    </tbody></table></div>`}
+  </div>`;
+}
+function renderMySchedule() {
+  const db = getDB();
+  const schedules = db.doctor_schedules.filter(s=>s.doctor_id===currentUser.id).sort((a,b)=>a.working_date.localeCompare(b.working_date));
+  $('content').innerHTML = `<div class="card">
+    <div class="card-header"><h3>My Schedule</h3></div>
+    ${!schedules.length ? '<div class="empty-state"><p>No schedules assigned</p></div>' :
+    `<div class="table-wrap"><table><thead><tr><th>Date</th><th>Start Time</th><th>End Time</th></tr></thead><tbody>
+    ${schedules.map(s=>`<tr><td>${formatDate(s.working_date)}</td><td>${s.start_time}</td><td>${s.end_time}</td></tr>`).join('')}
+    </tbody></table></div>`}
+  </div>`;
+}
+function addSchedule() {
+  const db = getDB();
+  const docs = db.users.filter(u=>u.role==='doctor');
+  openModal(`<h3>Create Schedule</h3>
+    <form onsubmit="saveSchedule(event)">
+      <div class="form-group"><label>Doctor</label>
+        <select id="schDoctor" required>${docs.map(d=>`<option value="${d.id}">${d.name}</option>`).join('')}</select>
+      </div>
+      <div class="grid-form">
+        <div class="form-group"><label>Working Date</label><input type="date" id="schDate" required></div>
+        <div class="form-group"><label>Start Time</label><input type="time" id="schStart" required></div>
+        <div class="form-group"><label>End Time</label><input type="time" id="schEnd" required></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Create</button>
+      </div>
+    </form>`);
+}
+function saveSchedule(e) {
+  e.preventDefault();
+  const db = getDB();
+  db.doctor_schedules.push({
+    id: db.nextId.doctor_schedules++,
+    doctor_id: +$('schDoctor').value, working_date: $('schDate').value,
+    start_time: $('schStart').value, end_time: $('schEnd').value
+  });
+  saveDB(db); closeModal(); navigate('doctors');
+}
+function editSchedule(id) {
+  const db = getDB();
+  const s = db.doctor_schedules.find(x=>x.id===id);
+  const docs = db.users.filter(u=>u.role==='doctor');
+  openModal(`<h3>Edit Schedule</h3>
+    <form onsubmit="saveEditSch(event,${id})">
+      <div class="form-group"><label>Doctor</label>
+        <select id="esDoctor" required>${docs.map(d=>`<option value="${d.id}" ${d.id===s.doctor_id?'selected':''}>${d.name}</option>`).join('')}</select>
+      </div>
+      <div class="grid-form">
+        <div class="form-group"><label>Date</label><input type="date" id="esDate" value="${s.working_date}" required></div>
+        <div class="form-group"><label>Start</label><input type="time" id="esStart" value="${s.start_time}" required></div>
+        <div class="form-group"><label>End</label><input type="time" id="esEnd" value="${s.end_time}" required></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>`);
+}
+function saveEditSch(e,id) {
+  e.preventDefault();
+  const db = getDB();
+  const s = db.doctor_schedules.find(x=>x.id===id);
+  s.doctor_id=+$('esDoctor').value; s.working_date=$('esDate').value;
+  s.start_time=$('esStart').value; s.end_time=$('esEnd').value;
+  saveDB(db); closeModal(); navigate('doctors');
+}
+function deleteSchedule(id) {
+  if(!confirm('Delete this schedule?')) return;
+  const db = getDB();
+  db.doctor_schedules = db.doctor_schedules.filter(s=>s.id!==id);
+  saveDB(db); navigate('doctors');
+}
+
+// ---------- Inventory ----------
+function renderInventory() {
+  if(currentUser.role !== 'admin') { $('content').innerHTML = '<div class="card"><p>Access denied</p></div>'; return; }
+  const db = getDB();
+  $('content').innerHTML = `<div class="card">
+    <div class="card-header"><h3>Inventory Management</h3>
+      <button class="btn btn-primary btn-sm" onclick="addInventory()">+ Add Item</button>
+    </div>
+    <div class="table-wrap"><table><thead><tr>
+      <th>ID</th><th>Item Name</th><th>Category</th><th>Quantity</th><th>Status</th><th>Actions</th>
+    </tr></thead><tbody>
+    ${db.inventory.map(i=>`<tr>
+      <td>#${i.id}</td><td>${i.item_name}</td><td><span class="badge badge-confirmed">${i.category}</span></td>
+      <td>${i.quantity}</td>
+      <td>${i.quantity<50?'<span class="badge badge-cancelled">Low Stock</span>':'<span class="badge badge-completed">Normal</span>'}</td>
+      <td><div class="row-actions">
+        <button class="btn btn-sm btn-warning" onclick="editInventory(${i.id})">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteInventory(${i.id})">Delete</button>
+      </div></td>
+    </tr>`).join('')}
+    </tbody></table></div>
+  </div>`;
+}
+function addInventory() {
+  openModal(`<h3>Add Inventory Item</h3>
+    <form onsubmit="saveInventory(event)">
+      <div class="form-group"><label>Item Name</label><input type="text" id="invName" required></div>
+      <div class="grid-form">
+        <div class="form-group"><label>Category</label>
+          <select id="invCat"><option>Medicine</option><option>Equipment</option><option>Supplies</option></select>
+        </div>
+        <div class="form-group"><label>Quantity</label><input type="number" id="invQty" min="0" required></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add</button>
+      </div>
+    </form>`);
+}
+function saveInventory(e) {
+  e.preventDefault();
+  const db = getDB();
+  db.inventory.push({
+    id: db.nextId.inventory++,
+    item_name: $('invName').value, category: $('invCat').value,
+    quantity: +$('invQty').value
+  });
+  saveDB(db); closeModal(); navigate('inventory');
+}
+function editInventory(id) {
+  const db = getDB();
+  const i = db.inventory.find(x=>x.id===id);
+  openModal(`<h3>Edit Item</h3>
+    <form onsubmit="saveEditInv(event,${id})">
+      <div class="form-group"><label>Item Name</label><input type="text" id="eiName" value="${i.item_name}" required></div>
+      <div class="grid-form">
+        <div class="form-group"><label>Category</label>
+          <select id="eiCat"><option ${i.category==='Medicine'?'selected':''}>Medicine</option>
+          <option ${i.category==='Equipment'?'selected':''}>Equipment</option>
+          <option ${i.category==='Supplies'?'selected':''}>Supplies</option></select>
+        </div>
+        <div class="form-group"><label>Quantity</label><input type="number" id="eiQty" value="${i.quantity}" min="0" required></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>`);
+}
+function saveEditInv(e,id) {
+  e.preventDefault();
+  const db = getDB();
+  const i = db.inventory.find(x=>x.id===id);
+  i.item_name=$('eiName').value; i.category=$('eiCat').value; i.quantity=+$('eiQty').value;
+  saveDB(db); closeModal(); navigate('inventory');
+}
+function deleteInventory(id) {
+  if(!confirm('Delete this item?')) return;
+  const db = getDB();
+  db.inventory = db.inventory.filter(i=>i.id!==id);
+  saveDB(db); navigate('inventory');
+}
+
+// ---------- Reports ----------
+function renderReports() {
+  if(currentUser.role !== 'admin') { $('content').innerHTML = '<div class="card"><p>Access denied</p></div>'; return; }
+  const db = getDB();
+  const today = todayStr();
+  const month = today.slice(0,7);
+
+  const daily = db.appointments.filter(a=>a.date===today);
+  const monthly = db.appointments.filter(a=>a.date.startsWith(month));
+  const completed = db.appointments.filter(a=>a.status==='completed').length;
+  const cancelled = db.appointments.filter(a=>a.status==='cancelled').length;
+
+  const byRole = {};
+  db.users.forEach(u => { byRole[u.role] = (byRole[u.role]||0)+1; });
+
+  const byStatus = {};
+  db.appointments.forEach(a => { byStatus[a.status] = (byStatus[a.status]||0)+1; });
+
+  const byDoctor = {};
+  db.appointments.forEach(a => {
+    const d = db.users.find(u=>u.id===a.doctor_id);
+    if(d) byDoctor[d.name] = (byDoctor[d.name]||0)+1;
+  });
+
+  $('content').innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-info"><div class="label">Daily Appointments</div><div class="value">${daily.length}</div></div><div class="stat-icon">📅</div></div>
+      <div class="stat-card green"><div class="stat-info"><div class="label">Monthly Appointments</div><div class="value">${monthly.length}</div></div><div class="stat-icon">📊</div></div>
+      <div class="stat-card orange"><div class="stat-info"><div class="label">Completed</div><div class="value">${completed}</div></div><div class="stat-icon">✅</div></div>
+      <div class="stat-card red"><div class="stat-info"><div class="label">Cancelled</div><div class="value">${cancelled}</div></div><div class="stat-icon">❌</div></div>
+    </div>
+
+    <div class="card"><div class="card-header"><h3>👥 User Statistics</h3></div>
+      <div class="table-wrap"><table><thead><tr><th>Role</th><th>Count</th></tr></thead><tbody>
+        ${Object.entries(byRole).map(([r,c])=>`<tr><td><span class="badge ${roleColor(r)}">${roleLabel(r)}</span></td><td><strong>${c}</strong></td></tr>`).join('')}
+      </tbody></table></div>
+    </div>
+
+    <div class="card"><div class="card-header"><h3>📅 Appointment Status Distribution</h3></div>
+      <div class="table-wrap"><table><thead><tr><th>Status</th><th>Count</th></tr></thead><tbody>
+        ${Object.entries(byStatus).map(([s,c])=>`<tr><td><span class="badge badge-${s}">${s}</span></td><td><strong>${c}</strong></td></tr>`).join('')}
+      </tbody></table></div>
+    </div>
+
+    <div class="card"><div class="card-header"><h3>👨‍⚕️ Clinic Usage by Doctor</h3></div>
+      <div class="table-wrap"><table><thead><tr><th>Doctor</th><th>Total Appointments</th></tr></thead><tbody>
+        ${Object.entries(byDoctor).sort((a,b)=>b[1]-a[1]).map(([d,c])=>`<tr><td>${d}</td><td><strong>${c}</strong></td></tr>`).join('')}
+      </tbody></table></div>
+    </div>
+  `;
+}
+
+// ---------- Settings ----------
+function renderSettings() {
+  if(currentUser.role !== 'admin') { $('content').innerHTML = '<div class="card"><p>Access denied</p></div>'; return; }
+  const s = getDB().settings;
+  $('content').innerHTML = `<div class="card">
+    <div class="card-header"><h3>Clinic Settings</h3></div>
+    <form onsubmit="saveSettings(event)">
+      <div class="form-group"><label>Clinic Name</label><input type="text" id="setName" value="${s.clinic_name}" required></div>
+      <div class="form-group"><label>Opening Hours</label><input type="text" id="setHours" value="${s.opening_hours}" required></div>
+      <div class="form-group"><label>Contact Information</label><input type="text" id="setContact" value="${s.contact}" required></div>
+      <div class="form-group"><label>Address</label><textarea id="setAddr" rows="2" required>${s.address}</textarea></div>
+      <button type="submit" class="btn btn-primary">Save Settings</button>
+    </form>
+  </div>`;
+}
+function saveSettings(e) {
+  e.preventDefault();
+  const db = getDB();
+  db.settings.clinic_name = $('setName').value;
+  db.settings.opening_hours = $('setHours').value;
+  db.settings.contact = $('setContact').value;
+  db.settings.address = $('setAddr').value;
+  saveDB(db);
+  openModal(`<h3>✅ Settings Updated</h3><p>Clinic settings have been saved successfully.</p>
+    <div class="modal-actions"><button class="btn btn-primary" onclick="closeModal()">OK</button></div>`);
+}
+
+// ---------- Init ----------
+initDB();
+const existingSession = getSession();
+if(existingSession) loadDashboard();
+else showLogin();
+</script>
+</body>
+</html>
