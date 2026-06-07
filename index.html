@@ -176,6 +176,17 @@
    UPNM CLINICAL MANAGEMENT SYSTEM
    Single-file prototype. localStorage = "database".
    ============================================================ */
+  const SUPABASE_URL =
+'https://你的project.supabase.co';
+
+const SUPABASE_KEY =
+'你的AnonKey';
+
+const supabase =
+window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 const DB_KEY='upnm_clinic_db';
 let DB=null, USER=null, modal=null;
 
