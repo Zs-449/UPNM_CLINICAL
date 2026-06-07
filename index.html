@@ -457,8 +457,7 @@ function submitBooking(){
   const reason=$('bkReason').value.trim()||'General consultation';
   DB.appointments.push({id:nextId(),patient_id:USER.id,doctor_id:+$('bkDoc').value,
     date:$('bkDate').value,time:$('bkTime').value,status:'scheduled',reason});
-  saveDB();
-  await supabase
+   await supabase
 .from("appointments")
 .insert([
 {
@@ -470,6 +469,8 @@ status:"scheduled",
 reason
 }
 ]);
+  saveDB();
+ 
   toast('Appointment booked successfully!');go('appointments');
 }
 
@@ -598,6 +599,14 @@ function saveAnnouncement(id){
   const t=$('anTitle').value.trim(),c=$('anContent').value.trim();if(!t)return;
   if(id){const a=DB.announcements.find(x=>x.id===id);a.title=t;a.content=c;}
   else DB.announcements.push({id:nextId(),title:t,content:c,created_at:today()});
+  await supabase
+.from("announcements")
+.insert([
+{
+title:t,
+content:c
+}
+]);
   saveDB();modal.hide();toast('Saved');go('announcements');
 }
 function delAnnouncement(id){if(!confirm('Delete this announcement?'))return;DB.announcements=DB.announcements.filter(a=>a.id!==id);saveDB();go('announcements');}
