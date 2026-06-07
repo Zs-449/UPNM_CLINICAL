@@ -59,7 +59,6 @@
   .now-serving{background:#e6f7f1;border-left:4px solid var(--accent)}
 </style>
 </head>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <body>
 
 <!-- ================= AUTH ================= -->
@@ -176,17 +175,6 @@
    UPNM CLINICAL MANAGEMENT SYSTEM
    Single-file prototype. localStorage = "database".
    ============================================================ */
-  const SUPABASE_URL =
-'https://你的project.supabase.co';
-
-const SUPABASE_KEY =
-'你的AnonKey';
-
-const supabase =
-window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
 const DB_KEY='upnm_clinic_db';
 let DB=null, USER=null, modal=null;
 
@@ -276,16 +264,7 @@ function toggleAuth(v){
 }
 function doLogin(){
   const e=$('loginEmail').value.trim().toLowerCase(),p=$('loginPass').value;
-  const { data } =
-await supabase
-.from("users")
-.select("*");
-  const u=data.find(
-x=>
-x.email.toLowerCase()==e
-&&
-x.password==p
-);
+  const u=DB.users.find(x=>x.email.toLowerCase()===e&&x.password===p);
   const err=$('loginErr');
   if(!u){err.textContent='Invalid email or password.';err.classList.remove('d-none');return;}
   err.classList.add('d-none');
@@ -302,16 +281,6 @@ function doRegister(){
   if(DB.users.some(u=>u.email.toLowerCase()===email))return fail('Email already registered.');
   err.classList.add('d-none');
   const u={id:nextId(),name,email,password:p1,role};
-  await supabase
-.from('users')
-.insert([
-{
-name,
-email,
-password:p1,
-role
-}
-]);
   DB.users.push(u);saveDB();
   USER=u;sessionStorage.setItem('upnm_session',u.id);
   enterApp();
@@ -457,21 +426,7 @@ function submitBooking(){
   const reason=$('bkReason').value.trim()||'General consultation';
   DB.appointments.push({id:nextId(),patient_id:USER.id,doctor_id:+$('bkDoc').value,
     date:$('bkDate').value,time:$('bkTime').value,status:'scheduled',reason});
-   await supabase
-.from("appointments")
-.insert([
-{
-patient_id:USER.id,
-doctor_id:+$('bkDoc').value,
-appointment_date:$('bkDate').value,
-appointment_time:$('bkTime').value,
-status:"scheduled",
-reason
-}
-]);
-  saveDB();
- 
-  toast('Appointment booked successfully!');go('appointments');
+  saveDB();toast('Appointment booked successfully!');go('appointments');
 }
 
 PAGES.patient.appointments=function(){
@@ -599,14 +554,6 @@ function saveAnnouncement(id){
   const t=$('anTitle').value.trim(),c=$('anContent').value.trim();if(!t)return;
   if(id){const a=DB.announcements.find(x=>x.id===id);a.title=t;a.content=c;}
   else DB.announcements.push({id:nextId(),title:t,content:c,created_at:today()});
-  await supabase
-.from("announcements")
-.insert([
-{
-title:t,
-content:c
-}
-]);
   saveDB();modal.hide();toast('Saved');go('announcements');
 }
 function delAnnouncement(id){if(!confirm('Delete this announcement?'))return;DB.announcements=DB.announcements.filter(a=>a.id!==id);saveDB();go('announcements');}
@@ -946,24 +893,8 @@ window.addEventListener('DOMContentLoaded',()=>{
   modal=new bootstrap.Modal($('appModal'));
   const sid=sessionStorage.getItem('upnm_session');
   if(sid){const u=userById(+sid);if(u){USER=u;enterApp();}}
-  $('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();
-                                                supabase
-.channel('appointments')
-.on(
-'postgres_changes',
-{
-event:'*',
-schema:'public',
-table:'appointments'
-},
-(payload)=>{
-loadAppointments();
-}
-)
-.subscribe();
-                                               });
+  $('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 });
-
 </script>
 </body>
 </html>
