@@ -276,7 +276,16 @@ function toggleAuth(v){
 }
 function doLogin(){
   const e=$('loginEmail').value.trim().toLowerCase(),p=$('loginPass').value;
-  const u=DB.users.find(x=>x.email.toLowerCase()===e&&x.password===p);
+  const { data } =
+await supabase
+.from("users")
+.select("*");
+  const u=data.find(
+x=>
+x.email.toLowerCase()==e
+&&
+x.password==p
+);
   const err=$('loginErr');
   if(!u){err.textContent='Invalid email or password.';err.classList.remove('d-none');return;}
   err.classList.add('d-none');
