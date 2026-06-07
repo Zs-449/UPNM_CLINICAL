@@ -457,7 +457,20 @@ function submitBooking(){
   const reason=$('bkReason').value.trim()||'General consultation';
   DB.appointments.push({id:nextId(),patient_id:USER.id,doctor_id:+$('bkDoc').value,
     date:$('bkDate').value,time:$('bkTime').value,status:'scheduled',reason});
-  saveDB();toast('Appointment booked successfully!');go('appointments');
+  saveDB();
+  await supabase
+.from("appointments")
+.insert([
+{
+patient_id:USER.id,
+doctor_id:+$('bkDoc').value,
+appointment_date:$('bkDate').value,
+appointment_time:$('bkTime').value,
+status:"scheduled",
+reason
+}
+]);
+  toast('Appointment booked successfully!');go('appointments');
 }
 
 PAGES.patient.appointments=function(){
