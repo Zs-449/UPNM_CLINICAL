@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UPNM Clinical Management System</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+  :root{
+    --primary:#1e5aa8; --primary-dark:#16447f; --primary-light:#e8f1fb;
+    --accent:#2aa888; --bg:#f4f7fb; --sidebar:#0f3d75;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);font-family:'Segoe UI',system-ui,sans-serif;margin:0;color:#243244}
+  .brand-logo{width:40px;height:40px;border-radius:10px;background:#fff;display:inline-flex;
+    align-items:center;justify-content:center;color:var(--primary);font-weight:800;font-size:1.1rem;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+  /* AUTH */
+  .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#1e5aa8,#0f3d75);padding:20px}
+  .auth-card{background:#fff;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:100%;max-width:430px;overflow:hidden}
+  .auth-head{background:var(--primary);color:#fff;padding:26px;text-align:center}
+  .auth-body{padding:28px}
+  /* APP */
+  .app{display:none;min-height:100vh}
+  .sidebar{position:fixed;top:0;left:0;width:250px;height:100vh;background:var(--sidebar);
+    color:#cdddf2;padding:0;overflow-y:auto;transition:.3s;z-index:1040}
+  .sidebar .logo-row{padding:18px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.1)}
+  .sidebar .logo-row span{color:#fff;font-weight:700;font-size:.95rem;line-height:1.1}
+  .nav-link-c{display:flex;align-items:center;gap:12px;padding:12px 22px;color:#bdd2ee;cursor:pointer;
+    border:none;background:none;width:100%;text-align:left;font-size:.93rem;transition:.15s}
+  .nav-link-c:hover{background:rgba(255,255,255,.08);color:#fff}
+  .nav-link-c.active{background:var(--primary);color:#fff;border-left:4px solid var(--accent)}
+  .nav-link-c i{font-size:1.1rem;width:20px}
+  .nav-section{padding:14px 22px 6px;font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:#7fa3d4}
+  .main{margin-left:250px;transition:.3s;min-height:100vh}
+  .topbar{background:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;
+    box-shadow:0 2px 8px rgba(0,0,0,.05);position:sticky;top:0;z-index:1030}
+  .content{padding:24px}
+  .stat-card{border:none;border-radius:14px;box-shadow:0 4px 14px rgba(30,90,168,.08);overflow:hidden}
+  .stat-card .icon{width:54px;height:54px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#fff}
+  .stat-card h3{font-size:1.9rem;font-weight:700;margin:0}
+  .page{display:none}.page.active{display:block}
+  .card{border:none;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,.05)}
+  .badge-status{font-size:.72rem;padding:.4em .7em;border-radius:20px}
+  .table thead th{background:var(--primary-light);color:var(--primary-dark);font-size:.82rem;text-transform:uppercase;letter-spacing:.5px;border:none}
+  .btn-primary{background:var(--primary);border-color:var(--primary)}
+  .btn-primary:hover{background:var(--primary-dark);border-color:var(--primary-dark)}
+  .text-primary{color:var(--primary)!important}
+  .menu-toggle{display:none;font-size:1.4rem;background:none;border:none;color:var(--primary)}
+  .avatar{width:38px;height:38px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600}
+  @media(max-width:991px){
+    .sidebar{transform:translateX(-100%)}
+    .sidebar.open{transform:translateX(0)}
+    .main{margin-left:0}
+    .menu-toggle{display:block}
+  }
+  .queue-row{transition:.2s}
+  .now-serving{background:#e6f7f1;border-left:4px solid var(--accent)}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+
+<!-- ================= AUTH ================= -->
+<div id="authView" class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-head">
+      <div class="brand-logo mx-auto mb-2" style="width:60px;height:60px;font-size:1.6rem">🏥</div>
+      <h4 class="mb-0 fw-bold">UPNM Clinic</h4>
+      <small style="opacity:.85">Clinical Management System</small>
+    </div>
+    <div class="auth-body">
+      <!-- LOGIN -->
+      <div id="loginForm">
+        <h5 class="fw-bold mb-3">Sign In</h5>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Email</label>
+          <input id="loginEmail" type="email" class="form-control" placeholder="you@upnm.edu.my">
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Password</label>
+          <input id="loginPass" type="password" class="form-control" placeholder="••••••••">
+        </div>
+        <div id="loginErr" class="alert alert-danger py-2 small d-none"></div>
+        <button class="btn btn-primary w-100 mb-3" onclick="doLogin()">Login</button>
+        <p class="text-center small mb-2">No account? <a href="#" onclick="toggleAuth('register');return false">Register here</a></p>
+        <div class="bg-light rounded p-2 small text-muted">
+          <strong>Demo accounts:</strong><br>
+          admin@upnm.edu.my · doctor@upnm.edu.my · student@upnm.edu.my · lecturer@upnm.edu.my<br>
+          Password for all: <code>123456</code>
+        </div>
+      </div>
+      <!-- REGISTER -->
+      <div id="registerForm" style="display:none">
+        <h5 class="fw-bold mb-3">Create Account</h5>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Full Name</label>
+          <input id="regName" class="form-control" placeholder="Your full name">
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Email</label>
+          <input id="regEmail" type="email" class="form-control" placeholder="you@upnm.edu.my">
+        </div>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold">Role</label>
+          <select id="regRole" class="form-select">
+            <option value="student">Student (Patient)</option>
+            <option value="lecturer">Lecturer (Patient)</option>
+            <option value="doctor">Doctor (Staff)</option>
+          </select>
+        </div>
+        <div class="row g-2 mb-2">
+          <div class="col"><label class="form-label small fw-semibold">Password</label>
+            <input id="regPass" type="password" class="form-control"></div>
+          <div class="col"><label class="form-label small fw-semibold">Confirm</label>
+            <input id="regPass2" type="password" class="form-control"></div>
+        </div>
+        <div id="regErr" class="alert alert-danger py-2 small d-none"></div>
+        <button class="btn btn-primary w-100 mb-3" onclick="doRegister()">Register</button>
+        <p class="text-center small mb-0">Have an account? <a href="#" onclick="toggleAuth('login');return false">Login</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="appView" class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="logo-row">
+      <div class="brand-logo">🏥</div>
+      <span>UPNM Clinic<br><small style="font-weight:400;color:#9fbde0">Management</small></span>
+    </div>
+    <nav id="sideNav"></nav>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="d-flex align-items-center gap-2">
+        <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="bi bi-list"></i></button>
+        <h5 id="pageTitle" class="mb-0 fw-bold text-primary">Dashboard</h5>
+      </div>
+      <div class="dropdown">
+        <a class="d-flex align-items-center gap-2 text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" style="cursor:pointer">
+          <div class="avatar" id="topAvatar">U</div>
+          <div class="d-none d-sm-block text-end">
+            <div class="fw-semibold small text-dark" id="topName">User</div>
+            <div class="text-muted" style="font-size:.72rem" id="topRole">role</div>
+          </div>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><span class="dropdown-item-text small text-muted" id="topEmail"></span></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="#" onclick="logout();return false"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<!-- Generic Modal -->
+<div class="modal fade" id="appModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:14px;border:none">
+      <div class="modal-header"><h5 class="modal-title" id="modalTitle"></h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ============================================================
+   UPNM CLINICAL MANAGEMENT SYSTEM
+   Single-file prototype. localStorage = "database".
+   ============================================================ */
+
+/* ============================================================
+   SUPABASE CONFIGURATION
+   Replace the values below with your own Supabase project credentials.
+   Get them from: https://supabase.com → your project → Settings → API
+   ============================================================ */
+const SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';   // e.g. 'https://abcxyz.supabase.co'
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';      // e.g. 'eyJhbGciOi...'
+
+const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ---------- Supabase helper: sync a full table into DB ---------- */
+/* Only overwrites local data if Supabase actually has rows (non-empty table) */
+async function syncFromSupabase(){
+  // Skip sync if credentials are still placeholders
+  if(SUPABASE_URL.includes('YOUR_') || SUPABASE_KEY.includes('YOUR_')) return;
+  try {
+    const [users, appointments, medical_records, prescriptions,
+           medical_certificates, announcements, doctor_schedules,
+           inventory, referrals] = await Promise.all([
+      _supabase.from('users').select('*'),
+      _supabase.from('appointments').select('*').order('created_at'),
+      _supabase.from('medical_records').select('*'),
+      _supabase.from('prescriptions').select('*'),
+      _supabase.from('medical_certificates').select('*'),
+      _supabase.from('announcements').select('*'),
+      _supabase.from('doctor_schedules').select('*'),
+      _supabase.from('inventory').select('*'),
+      _supabase.from('referrals').select('*'),
+    ]);
+    // Only overwrite if Supabase returned actual rows (avoids wiping seed data)
+    if(users.data?.length)              DB.users               = users.data;
+    if(appointments.data?.length)       DB.appointments        = appointments.data;
+    if(medical_records.data?.length)    DB.medical_records     = medical_records.data;
+    if(prescriptions.data?.length)      DB.prescriptions       = prescriptions.data;
+    if(medical_certificates.data?.length) DB.medical_certificates = medical_certificates.data;
+    if(announcements.data?.length)      DB.announcements       = announcements.data;
+    if(doctor_schedules.data?.length)   DB.doctor_schedules    = doctor_schedules.data;
+    if(inventory.data?.length)          DB.inventory           = inventory.data;
+    if(referrals.data?.length)          DB.referrals           = referrals.data;
+    saveDB(); // keep localStorage in sync as cache
+  } catch(e){ console.warn('Supabase sync failed, using local data:', e); }
+}
+
+/* ---------- Supabase: save a new user ---------- */
+async function supabaseRegisterUser({name, email, password, role}){
+  const { data, error } = await _supabase.from('users').insert([{ name, email, password, role }]).select().single();
+  if(error){ console.error('Register error:', error); return null; }
+  return data;
+}
+
+/* ---------- Supabase: insert appointment ---------- */
+async function supabaseInsertAppointment(appt){
+  const { error } = await _supabase.from('appointments').insert([appt]);
+  if(error) console.error('Appointment insert error:', error);
+}
+
+/* ---------- Supabase: update appointment ---------- */
+async function supabaseUpdateAppointment(id, fields){
+  const { error } = await _supabase.from('appointments').update(fields).eq('id', id);
+  if(error) console.error('Appointment update error:', error);
+}
+
+/* ---------- Supabase: insert announcement ---------- */
+async function supabaseInsertAnnouncement({title, content}){
+  const { error } = await _supabase.from('announcements').insert([{ title, content }]);
+  if(error) console.error('Announcement insert error:', error);
+}
+
+/* ---------- Supabase: insert medical record ---------- */
+async function supabaseInsertRecord(rec){
+  const { error } = await _supabase.from('medical_records').insert([rec]);
+  if(error) console.error('Record insert error:', error);
+}
+
+/* ---------- Supabase: insert prescription ---------- */
+async function supabaseInsertPrescription(rx){
+  const { error } = await _supabase.from('prescriptions').insert([rx]);
+  if(error) console.error('Prescription insert error:', error);
+}
+
+/* ---------- Supabase: real-time listener for appointments ---------- */
+function setupRealtimeSync(){
+  _supabase.channel('appointments')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, async ()=>{
+      await syncFromSupabase();
+      // Refresh current page if it shows appointment-related data
+      const currentKey = document.querySelector('.nav-link-c.active')?.dataset?.k;
+      if(currentKey) go(currentKey);
+    })
+    .subscribe();
+
+  _supabase.channel('announcements')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, async ()=>{
+      await syncFromSupabase();
+    })
+    .subscribe();
+}
+/* ============================================================
+   END SUPABASE CONFIGURATION
+   ============================================================ */
+const DB_KEY='upnm_clinic_db';
+let DB=null, USER=null, modal=null;
+
+/* ---------- Seed / Load DB ---------- */
+function seed(){
+  return {
+    users:[
+      {id:1,name:'System Admin',email:'admin@upnm.edu.my',password:'123456',role:'admin'},
+      {id:2,name:'Dr. Aisyah Rahman',email:'doctor@upnm.edu.my',password:'123456',role:'doctor'},
+      {id:3,name:'Dr. Lim Wei Han',email:'doctor2@upnm.edu.my',password:'123456',role:'doctor'},
+      {id:4,name:'Ahmad Faiz (Student)',email:'student@upnm.edu.my',password:'123456',role:'student'},
+      {id:5,name:'Prof. Sarah Tan',email:'lecturer@upnm.edu.my',password:'123456',role:'lecturer'},
+      {id:6,name:'Nurul Izzah (Student)',email:'nurul@upnm.edu.my',password:'123456',role:'student'},
+    ],
+    appointments:[
+      {id:1,patient_id:4,doctor_id:2,date:today(),time:'09:00',status:'waiting',reason:'Fever & cough'},
+      {id:2,patient_id:6,doctor_id:2,date:today(),time:'09:30',status:'waiting',reason:'Headache'},
+      {id:3,patient_id:5,doctor_id:3,date:today(),time:'10:00',status:'scheduled',reason:'Routine check-up'},
+      {id:4,patient_id:4,doctor_id:2,date:addDays(3),time:'11:00',status:'scheduled',reason:'Follow-up'},
+      {id:5,patient_id:6,doctor_id:2,date:addDays(-5),time:'14:00',status:'completed',reason:'Flu'},
+    ],
+    medical_records:[
+      {id:1,patient_id:4,doctor_id:2,diagnosis:'Upper respiratory tract infection',notes:'Rest, hydration advised.',created_at:addDays(-5)},
+      {id:2,patient_id:6,doctor_id:2,diagnosis:'Common cold',notes:'Symptomatic treatment.',created_at:addDays(-5)},
+    ],
+    prescriptions:[
+      {id:1,patient_id:4,doctor_id:2,medicine:'Paracetamol 500mg',dosage:'2 tablets',instructions:'After meals, 3x daily',created_at:addDays(-5),active:true},
+      {id:2,patient_id:6,doctor_id:2,medicine:'Cough Syrup',dosage:'10ml',instructions:'3x daily',created_at:addDays(-5),active:false},
+    ],
+    medical_certificates:[
+      {id:1,patient_id:4,doctor_id:2,issue_date:addDays(-5),duration:2,remarks:'Unfit for class due to flu'},
+    ],
+    announcements:[
+      {id:1,title:'Clinic Closed on Public Holiday',content:'The clinic will be closed on the upcoming national holiday. Emergency services remain available at the main hospital.',created_at:addDays(-2)},
+      {id:2,title:'Free Flu Vaccination',content:'Free flu vaccination available for all students and staff this month. Walk-in welcome.',created_at:addDays(-1)},
+    ],
+    doctor_schedules:[
+      {id:1,doctor_id:2,working_date:today(),start_time:'08:00',end_time:'17:00'},
+      {id:2,doctor_id:3,working_date:today(),start_time:'09:00',end_time:'13:00'},
+    ],
+    inventory:[
+      {id:1,item_name:'Paracetamol 500mg',quantity:540,category:'Medicine'},
+      {id:2,item_name:'Cough Syrup',quantity:80,category:'Medicine'},
+      {id:3,item_name:'Amoxicillin 250mg',quantity:30,category:'Medicine'},
+      {id:4,item_name:'Surgical Masks (box)',quantity:120,category:'Equipment'},
+      {id:5,item_name:'Digital Thermometer',quantity:15,category:'Equipment'},
+      {id:6,item_name:'Blood Pressure Monitor',quantity:6,category:'Equipment'},
+    ],
+    referrals:[],
+    settings:{clinic_name:'UPNM University Clinic',hours:'Mon–Fri 8:00 AM – 5:00 PM',contact:'+603-9051 3400',email:'clinic@upnm.edu.my'},
+    seq:100
+  };
+}
+function loadDB(){const s=localStorage.getItem(DB_KEY);DB=s?JSON.parse(s):seed();if(!s)saveDB();}
+function saveDB(){localStorage.setItem(DB_KEY,JSON.stringify(DB));}
+function nextId(){return ++DB.seq;}
+
+/* ---------- date helpers ---------- */
+function today(){return new Date().toISOString().slice(0,10);}
+function addDays(n){const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function fmtDate(s){if(!s)return'-';return new Date(s+'T00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}
+
+/* ---------- helpers ---------- */
+const $=id=>document.getElementById(id);
+function userById(id){return DB.users.find(u=>u.id===id);}
+function patients(){return DB.users.filter(u=>u.role==='student'||u.role==='lecturer');}
+function doctors(){return DB.users.filter(u=>u.role==='doctor');}
+function esc(s){return(s||'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function statusBadge(s){
+  const m={scheduled:'bg-info text-dark',waiting:'bg-warning text-dark',serving:'bg-primary',completed:'bg-success',cancelled:'bg-secondary'};
+  return `<span class="badge badge-status ${m[s]||'bg-secondary'}">${s}</span>`;
+}
+function toast(msg){
+  const t=document.createElement('div');
+  t.className='position-fixed bottom-0 end-0 m-3 alert alert-success shadow';t.style.zIndex=2000;
+  t.innerHTML='<i class="bi bi-check-circle me-2"></i>'+msg;document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2500);
+}
+function showModal(title,body){$('modalTitle').textContent=title;$('modalBody').innerHTML=body;modal.show();}
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+function toggleAuth(v){
+  $('loginForm').style.display=v==='login'?'block':'none';
+  $('registerForm').style.display=v==='register'?'block':'none';
+}
+function doLogin(){
+  const e=$('loginEmail').value.trim().toLowerCase(),p=$('loginPass').value;
+  const u=DB.users.find(x=>x.email.toLowerCase()===e&&x.password===p);
+  const err=$('loginErr');
+  if(!u){err.textContent='Invalid email or password.';err.classList.remove('d-none');return;}
+  err.classList.add('d-none');
+  USER=u;sessionStorage.setItem('upnm_session',u.id);
+  enterApp();
+}
+function doRegister(){
+  const name=$('regName').value.trim(),email=$('regEmail').value.trim().toLowerCase();
+  const role=$('regRole').value,p1=$('regPass').value,p2=$('regPass2').value;
+  const err=$('regErr');const fail=m=>{err.textContent=m;err.classList.remove('d-none');};
+  if(!name||!email||!p1)return fail('All fields are required.');
+  if(p1.length<6)return fail('Password must be at least 6 characters.');
+  if(p1!==p2)return fail('Passwords do not match.');
+  if(DB.users.some(u=>u.email.toLowerCase()===email))return fail('Email already registered.');
+  err.classList.add('d-none');
+  const u={id:nextId(),name,email,password:p1,role};
+  DB.users.push(u);saveDB();
+  // Also write to Supabase (non-blocking)
+  supabaseRegisterUser({name, email, password: p1, role});
+  USER=u;sessionStorage.setItem('upnm_session',u.id);
+  enterApp();
+}
+function logout(){sessionStorage.removeItem('upnm_session');USER=null;location.reload();}
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+const MENUS={
+  patient:[
+    {s:'Main'},
+    {k:'dashboard',i:'speedometer2',t:'Dashboard'},
+    {k:'book',i:'calendar-plus',t:'Book Appointment'},
+    {k:'appointments',i:'calendar-week',t:'My Appointments'},
+    {k:'queue',i:'people',t:'Queue Status'},
+    {s:'Health'},
+    {k:'records',i:'file-medical',t:'Medical Records'},
+    {k:'prescriptions',i:'capsule',t:'Prescriptions'},
+    {k:'mc',i:'file-earmark-text',t:'Medical Certificates'},
+    {s:'Info'},
+    {k:'announcements',i:'megaphone',t:'Announcements'},
+  ],
+  doctor:[
+    {s:'Main'},
+    {k:'dashboard',i:'speedometer2',t:'Dashboard'},
+    {k:'dqueue',i:'people',t:'Today\'s Queue'},
+    {k:'dappointments',i:'calendar-week',t:'Appointments'},
+    {s:'Clinical'},
+    {k:'dconsult',i:'clipboard2-pulse',t:'Consultations'},
+    {k:'dpatients',i:'person-vcard',t:'Patient Records'},
+  ],
+  admin:[
+    {s:'Main'},
+    {k:'dashboard',i:'speedometer2',t:'Dashboard'},
+    {k:'reports',i:'graph-up',t:'Reports & Analytics'},
+    {s:'Management'},
+    {k:'users',i:'people',t:'User Management'},
+    {k:'aappointments',i:'calendar-week',t:'Appointments'},
+    {k:'schedules',i:'calendar3',t:'Doctor Schedules'},
+    {k:'inventory',i:'box-seam',t:'Inventory'},
+    {k:'announcements',i:'megaphone',t:'Announcements'},
+    {s:'System'},
+    {k:'settings',i:'gear',t:'Clinic Settings'},
+  ]
+};
+function roleGroup(r){return r==='admin'?'admin':r==='doctor'?'doctor':'patient';}
+
+function enterApp(){
+  $('authView').style.display='none';
+  $('appView').style.display='block';
+  $('topName').textContent=USER.name;
+  $('topRole').textContent=USER.role;
+  $('topEmail').textContent=USER.email;
+  $('topAvatar').textContent=USER.name.charAt(0).toUpperCase();
+  buildNav();
+  go('dashboard');
+}
+function buildNav(){
+  const g=roleGroup(USER.role);
+  $('sideNav').innerHTML=MENUS[g].map(m=>m.s
+    ?`<div class="nav-section">${m.s}</div>`
+    :`<button class="nav-link-c" data-k="${m.k}" onclick="go('${m.k}')"><i class="bi bi-${m.i}"></i>${m.t}</button>`
+  ).join('');
+}
+function go(key){
+  document.querySelectorAll('.nav-link-c').forEach(b=>b.classList.toggle('active',b.dataset.k===key));
+  document.getElementById('sidebar').classList.remove('open');
+  const r=roleGroup(USER.role);
+  const fn=PAGES[r][key]||PAGES.common[key];
+  if(fn)fn();
+}
+function setTitle(t){$('pageTitle').textContent=t;}
+function render(html){$('content').innerHTML=html;}
+
+/* small reusable */
+function statCard(color,icon,num,label){
+  return `<div class="col-sm-6 col-xl-3"><div class="card stat-card p-3 h-100">
+    <div class="d-flex align-items-center gap-3">
+      <div class="icon" style="background:${color}"><i class="bi bi-${icon}"></i></div>
+      <div><h3>${num}</h3><div class="text-muted small">${label}</div></div>
+    </div></div></div>`;
+}
+
+/* ============================================================
+   PATIENT PAGES
+   ============================================================ */
+const PAGES={common:{},patient:{},doctor:{},admin:{}};
+
+PAGES.patient.dashboard=function(){
+  setTitle('Patient Dashboard');
+  const my=DB.appointments.filter(a=>a.patient_id===USER.id);
+  const upcoming=my.filter(a=>['scheduled','waiting','serving'].includes(a.status)).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time))[0];
+  const queue=DB.appointments.filter(a=>a.date===today()&&['waiting','serving'].includes(a.status));
+  const myQ=queue.findIndex(a=>a.patient_id===USER.id);
+  const activeRx=DB.prescriptions.filter(p=>p.patient_id===USER.id&&p.active).length;
+  const recCount=DB.medical_records.filter(r=>r.patient_id===USER.id).length;
+  render(`
+    <div class="row g-3 mb-4">
+      ${statCard('#1e5aa8','calendar-check',upcoming?fmtDate(upcoming.date):'None','Upcoming Appointment')}
+      ${statCard('#f0ad4e','people',myQ>=0?'#'+(myQ+1):'-','My Queue Position')}
+      ${statCard('#2aa888','capsule',activeRx,'Active Prescriptions')}
+      ${statCard('#6f42c1','file-medical',recCount,'Medical Records')}
+    </div>
+    <div class="row g-3">
+      <div class="col-lg-7"><div class="card p-3 h-100">
+        <h6 class="fw-bold mb-3"><i class="bi bi-calendar-event text-primary me-2"></i>Next Appointment</h6>
+        ${upcoming?`<div class="p-3 rounded" style="background:var(--primary-light)">
+          <div class="d-flex justify-content-between"><strong>${fmtDate(upcoming.date)} · ${upcoming.time}</strong>${statusBadge(upcoming.status)}</div>
+          <div class="small text-muted mt-1">Doctor: ${esc(userById(upcoming.doctor_id)?.name)}</div>
+          <div class="small text-muted">Reason: ${esc(upcoming.reason)}</div>
+        </div>`:'<p class="text-muted">No upcoming appointments. <a href="#" onclick="go(\'book\');return false">Book one now</a>.</p>'}
+      </div></div>
+      <div class="col-lg-5"><div class="card p-3 h-100">
+        <h6 class="fw-bold mb-3"><i class="bi bi-megaphone text-primary me-2"></i>Latest Announcements</h6>
+        ${DB.announcements.slice(-3).reverse().map(a=>`<div class="border-bottom pb-2 mb-2">
+          <div class="fw-semibold small">${esc(a.title)}</div>
+          <div class="text-muted" style="font-size:.8rem">${esc(a.content.slice(0,70))}...</div></div>`).join('')}
+      </div></div>
+    </div>`);
+};
+
+PAGES.patient.book=function(){
+  setTitle('Book Appointment');
+  const docOpts=doctors().map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join('');
+  render(`<div class="row justify-content-center"><div class="col-lg-7">
+    <div class="card p-4">
+      <h6 class="fw-bold mb-3">New Appointment Request</h6>
+      <div class="mb-3"><label class="form-label small fw-semibold">Doctor</label>
+        <select id="bkDoc" class="form-select">${docOpts}</select></div>
+      <div class="row g-3">
+        <div class="col"><label class="form-label small fw-semibold">Date</label>
+          <input id="bkDate" type="date" class="form-control" min="${today()}" value="${addDays(1)}"></div>
+        <div class="col"><label class="form-label small fw-semibold">Time</label>
+          <select id="bkTime" class="form-select">${['08:30','09:00','09:30','10:00','10:30','11:00','11:30','14:00','14:30','15:00','15:30'].map(t=>`<option>${t}</option>`).join('')}</select></div>
+      </div>
+      <div class="my-3"><label class="form-label small fw-semibold">Reason for Visit</label>
+        <textarea id="bkReason" class="form-control" rows="3" placeholder="Describe your symptoms..."></textarea></div>
+      <button class="btn btn-primary" onclick="submitBooking()"><i class="bi bi-check-circle me-1"></i>Confirm Booking</button>
+    </div></div></div>`);
+};
+function submitBooking(){
+  const reason=$('bkReason').value.trim()||'General consultation';
+  const appt={id:nextId(),patient_id:USER.id,doctor_id:+$('bkDoc').value,
+    date:$('bkDate').value,time:$('bkTime').value,status:'scheduled',reason};
+  DB.appointments.push(appt);
+  saveDB();
+  // Also write to Supabase (non-blocking)
+  supabaseInsertAppointment(appt);
+  toast('Appointment booked successfully!');go('appointments');
+}
+
+PAGES.patient.appointments=function(){
+  setTitle('My Appointments');
+  const my=DB.appointments.filter(a=>a.patient_id===USER.id).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
+  render(`<div class="card p-3"><h6 class="fw-bold mb-3">Appointment History</h6>
+    <div class="table-responsive"><table class="table align-middle">
+    <thead><tr><th>Date</th><th>Time</th><th>Doctor</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>${my.length?my.map(a=>`<tr>
+      <td>${fmtDate(a.date)}</td><td>${a.time}</td><td>${esc(userById(a.doctor_id)?.name)}</td>
+      <td class="small">${esc(a.reason)}</td><td>${statusBadge(a.status)}</td>
+      <td>${['scheduled'].includes(a.status)?`
+        <button class="btn btn-sm btn-outline-primary me-1" onclick="reschedule(${a.id})"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-outline-danger" onclick="cancelAppt(${a.id})"><i class="bi bi-x-lg"></i></button>`:'-'}</td>
+    </tr>`).join(''):'<tr><td colspan="6" class="text-center text-muted py-4">No appointments yet.</td></tr>'}
+    </tbody></table></div></div>`);
+};
+function cancelAppt(id){
+  const a=DB.appointments.find(x=>x.id===id);
+  a.status='cancelled';
+  saveDB();
+  // Also update in Supabase (non-blocking)
+  supabaseUpdateAppointment(id, {status:'cancelled'});
+  toast('Appointment cancelled');
+  go(roleGroup(USER.role)==='admin'?'aappointments':'appointments');
+}
+function reschedule(id){
+  const a=DB.appointments.find(x=>x.id===id);
+  showModal('Reschedule Appointment',`
+    <label class="form-label small">Date</label>
+    <input id="rsDate" type="date" class="form-control mb-2" min="${today()}" value="${a.date}">
+    <label class="form-label small">Time</label>
+    <select id="rsTime" class="form-select mb-3">${['08:30','09:00','09:30','10:00','10:30','11:00','14:00','14:30','15:00'].map(t=>`<option ${t===a.time?'selected':''}>${t}</option>`).join('')}</select>
+    <button class="btn btn-primary w-100" onclick="saveReschedule(${id})">Save Changes</button>`);
+}
+function saveReschedule(id){
+  const a=DB.appointments.find(x=>x.id===id);
+  a.date=$('rsDate').value;
+  a.time=$('rsTime').value;
+  saveDB();
+  // Also update in Supabase (non-blocking)
+  supabaseUpdateAppointment(id, {date: a.date, time: a.time});
+  modal.hide();toast('Appointment rescheduled');go('appointments');
+}
+
+PAGES.patient.queue=function(){
+  setTitle('Queue Status');
+  const q=DB.appointments.filter(a=>a.date===today()&&['waiting','serving','completed'].includes(a.status))
+    .sort((a,b)=>a.time.localeCompare(b.time));
+  const serving=q.find(a=>a.status==='serving');
+  render(`<div class="row g-3 mb-3">
+    <div class="col-md-6"><div class="card p-4 text-center" style="background:var(--primary);color:#fff">
+      <div class="small">NOW SERVING</div>
+      <h2 class="fw-bold mb-0">${serving?esc(userById(serving.patient_id)?.name):'—'}</h2>
+      <div class="small">${serving?esc(userById(serving.doctor_id)?.name):'No patient being served'}</div>
+    </div></div>
+    <div class="col-md-6"><div class="card p-4 text-center">
+      <div class="small text-muted">PATIENTS WAITING</div>
+      <h2 class="fw-bold mb-0 text-primary">${q.filter(a=>a.status==='waiting').length}</h2>
+    </div></div></div>
+    <div class="card p-3"><h6 class="fw-bold mb-3">Today's Queue (${fmtDate(today())})</h6>
+    <div class="table-responsive"><table class="table align-middle">
+    <thead><tr><th>#</th><th>Time</th><th>Patient</th><th>Doctor</th><th>Status</th></tr></thead>
+    <tbody>${q.map((a,i)=>`<tr class="${a.status==='serving'?'now-serving':''}">
+      <td>${i+1}</td><td>${a.time}</td>
+      <td>${a.patient_id===USER.id?'<strong>'+esc(userById(a.patient_id)?.name)+' (You)</strong>':esc(userById(a.patient_id)?.name)}</td>
+      <td>${esc(userById(a.doctor_id)?.name)}</td><td>${statusBadge(a.status)}</td></tr>`).join('')||'<tr><td colspan="5" class="text-center text-muted py-3">Queue empty</td></tr>'}
+    </tbody></table></div></div>`);
+};
+
+PAGES.patient.records=function(){
+  setTitle('Medical Records');
+  const recs=DB.medical_records.filter(r=>r.patient_id===USER.id).sort((a,b)=>b.created_at.localeCompare(a.created_at));
+  render(`<div class="card p-3"><h6 class="fw-bold mb-3">My Medical Records</h6>
+    ${recs.length?recs.map(r=>`<div class="border rounded p-3 mb-2">
+      <div class="d-flex justify-content-between"><strong class="text-primary">${esc(r.diagnosis)}</strong>
+      <span class="small text-muted">${fmtDate(r.created_at)}</span></div>
+      <div class="small mt-1"><strong>Doctor:</strong> ${esc(userById(r.doctor_id)?.name)}</div>
+      <div class="small"><strong>Notes:</strong> ${esc(r.notes)}</div>
+    </div>`).join(''):'<p class="text-muted">No medical records found.</p>'}</div>`);
+};
+PAGES.patient.prescriptions=function(){
+  setTitle('Prescriptions');
+  const rx=DB.prescriptions.filter(p=>p.patient_id===USER.id).sort((a,b)=>b.created_at.localeCompare(a.created_at));
+  render(`<div class="card p-3"><h6 class="fw-bold mb-3">Prescription History</h6>
+    <div class="table-responsive"><table class="table align-middle">
+    <thead><tr><th>Date</th><th>Medicine</th><th>Dosage</th><th>Instructions</th><th>Status</th></tr></thead>
+    <tbody>${rx.length?rx.map(p=>`<tr><td>${fmtDate(p.created_at)}</td><td>${esc(p.medicine)}</td>
+      <td>${esc(p.dosage)}</td><td class="small">${esc(p.instructions)}</td>
+      <td>${p.active?'<span class="badge bg-success">Active</span>':'<span class="badge bg-secondary">Completed</span>'}</td></tr>`).join('')
+      :'<tr><td colspan="5" class="text-center text-muted py-3">No prescriptions.</td></tr>'}
+    </tbody></table></div></div>`);
+};
+PAGES.patient.mc=function(){
+  setTitle('Medical Certificates');
+  const mcs=DB.medical_certificates.filter(m=>m.patient_id===USER.id);
+  render(`<div class="card p-3"><h6 class="fw-bold mb-3">My Medical Certificates</h6>
+    ${mcs.length?mcs.map(m=>`<div class="border rounded p-3 mb-2 d-flex justify-content-between align-items-center">
+      <div><strong>MC #${m.id}</strong> · ${m.duration} day(s)
+        <div class="small text-muted">Issued ${fmtDate(m.issue_date)} by ${esc(userById(m.doctor_id)?.name)}</div>
+        <div class="small">${esc(m.remarks)}</div></div>
+      <button class="btn btn-sm btn-outline-primary" onclick="downloadMC(${m.id})"><i class="bi bi-download me-1"></i>PDF</button>
+    </div>`).join(''):'<p class="text-muted">No medical certificates issued.</p>'}</div>`);
+};
+function downloadMC(id){
+  const m=DB.medical_certificates.find(x=>x.id===id);const p=userById(m.patient_id);
+  const html=`<html><head><title>MC-${id}</title></head><body style="font-family:Arial;padding:40px">
+    <h2 style="text-align:center;color:#1e5aa8">UPNM UNIVERSITY CLINIC</h2>
+    <h3 style="text-align:center">MEDICAL CERTIFICATE</h3><hr>
+    <p><b>Certificate No:</b> MC-${id}</p>
+    <p><b>Patient:</b> ${p.name}</p>
+    <p><b>This is to certify that the above patient is unfit for duty/study for a period of</b> ${m.duration} day(s)
+       commencing from ${fmtDate(m.issue_date)}.</p>
+    <p><b>Remarks:</b> ${m.remarks}</p>
+    <br><br><p>_______________________<br>${userById(m.doctor_id).name}<br>Medical Officer</p>
+    </body></html>`;
+  const w=window.open('','_blank');w.document.write(html);w.document.close();setTimeout(()=>w.print(),300);
+}
+PAGES.common.announcements=function(){
+  setTitle('Announcements');
+  const isAdmin=USER.role==='admin';
+  const list=[...DB.announcements].reverse();
+  render(`<div class="d-flex justify-content-between align-items-center mb-3">
+      <h6 class="fw-bold mb-0">Clinic Announcements</h6>
+      ${isAdmin?'<button class="btn btn-sm btn-primary" onclick="editAnnouncement()"><i class="bi bi-plus-lg me-1"></i>New</button>':''}</div>
+    ${list.map(a=>`<div class="card p-3 mb-2"><div class="d-flex justify-content-between">
+      <strong class="text-primary">${esc(a.title)}</strong><span class="small text-muted">${fmtDate(a.created_at)}</span></div>
+      <p class="mb-0 mt-1 small">${esc(a.content)}</p>
+      ${isAdmin?`<div class="mt-2"><button class="btn btn-sm btn-outline-primary me-1" onclick="editAnnouncement(${a.id})"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-outline-danger" onclick="delAnnouncement(${a.id})"><i class="bi bi-trash"></i></button></div>`:''}
+    </div>`).join('')}`);
+};
+function editAnnouncement(id){
+  const a=id?DB.announcements.find(x=>x.id===id):{title:'',content:''};
+  showModal((id?'Edit':'New')+' Announcement',`
+    <label class="form-label small">Title</label><input id="anTitle" class="form-control mb-2" value="${esc(a.title)}">
+    <label class="form-label small">Content</label><textarea id="anContent" class="form-control mb-3" rows="4">${esc(a.content)}</textarea>
+    <button class="btn btn-primary w-100" onclick="saveAnnouncement(${id||0})">Save</button>`);
+}
+function saveAnnouncement(id){
+  const t=$('anTitle').value.trim(),c=$('anContent').value.trim();if(!t)return;
+  if(id){const a=DB.announcements.find(x=>x.id===id);a.title=t;a.content=c;}
+  else {
+    DB.announcements.push({id:nextId(),title:t,content:c,created_at:today()});
+    // Also write to Supabase (non-blocking)
+    supabaseInsertAnnouncement({title:t, content:c});
+  }
+  saveDB();modal.hide();toast('Saved');go('announcements');
+}
+function delAnnouncement(id){if(!confirm('Delete this announcement?'))return;DB.announcements=DB.announcements.filter(a=>a.id!==id);saveDB();go('announcements');}
+
+/* ============================================================
+   DOCTOR PAGES
+   ============================================================ */
+PAGES.doctor.dashboard=function(){
+  setTitle('Doctor Dashboard');
+  const mine=DB.appointments.filter(a=>a.doctor_id===USER.id);
+  const todays=mine.filter(a=>a.date===today());
+  const waiting=todays.filter(a=>a.status==='waiting').length;
+  const rxToday=DB.prescriptions.filter(p=>p.doctor_id===USER.id&&p.created_at===today()).length;
+  const mcToday=DB.medical_certificates.filter(m=>m.doctor_id===USER.id&&m.issue_date===today()).length;
+  render(`<div class="row g-3 mb-4">
+    ${statCard('#1e5aa8','calendar-day',todays.length,"Today's Appointments")}
+    ${statCard('#f0ad4e','hourglass-split',waiting,'Patients Waiting')}
+    ${statCard('#2aa888','capsule',rxToday,'Prescriptions Today')}
+    ${statCard('#6f42c1','file-earmark-text',mcToday,'MC Issued Today')}
+  </div>
+  <div class="card p-3"><h6 class="fw-bold mb-3">Today's Schedule</h6>
+    <div class="table-responsive"><table class="table align-middle">
+    <thead><tr><th>Time</th><th>Patient</th><th>Reason</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody>${todays.sort((a,b)=>a.time.localeCompare(b.time)).map(a=>`<tr>
+      <td>${a.time}</td><td>${esc(userById(a.patient_id)?.name)}</td><td class="small">${esc(a.reason)}</td>
+      <td>${statusBadge(a.status)}</td>
+      <td><button class="btn btn-sm btn-primary" onclick="openConsult(${a.id})" ${a.status==='completed'||a.status==='cancelled'?'disabled':''}><i class="bi bi-clipboard2-pulse me-1"></i>Consult</button></td>
+    </tr>`).join('')||'<tr><td colspan="5" class="text-center text-muted py-3">No appointments today.</td></tr>'}
+    </tbody></table></div></div>`);
+};
+PAGES.doctor.dqueue=function(){
+  setTitle("Today's Queue");
+  const q=DB.appointments.filter(a=>a.doctor_id===USER.id&&a.date===today()&&['waiting','serving'].includes(a.status))
+    .sort((a,b)=>a.time.localeCompare(b.time));
+  const serving=q.find(a=>a.status==='serving');
+  render(`<div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="fw-bold mb-0">Patient Queue · ${fmtDate(today())}</h6>
+    <button class="btn btn-primary" onclick="callNext()" ${serving||!q.some(a=>a.status==='waiting')?'disabled':''}>
+      <i class="bi bi-megaphone me-1"></i>Call Next Patient</button></div>
+    ${serving?`<div class="card p-3 mb-3 now-serving"><div class="d-flex justify-content-between align-items-center">
+      <div><span class="text-muted small">NOW SERVING</span><h5 class="mb-0">${esc(userById(serving.patient_id)?.name)}</h5></div>
+      <div><button class="btn btn-success btn-sm me-1" onclick="openConsult(${serving.id})">Consult</button>
+      <button class="btn btn-outline-secondary btn-sm" onclick="finishServing(${serving.id})">Mark Done</button></div></div></div>`:''}
+    <div class="card p-3"><h6 class="fw-bold mb-3">Waiting (${q.filter(a=>a.status==='waiting').length})</h6>
+    ${q.filter(a=>a.status==='waiting').map((a,i)=>`<div class="d-flex justify-content-between align-items-center border-bottom py-2 queue-row">
+      <div><span class="badge bg-primary me-2">#${i+1}</span>${esc(userById(a.patient_id)?.name)} <span class="text-muted small">· ${a.time} · ${esc(a.reason)}</span></div>
+    </div>`).join('')||'<p class="text-muted mb-0">No patients waiting.</p>'}</div>`);
+};
+function callNext(){
+  const next=DB.appointments.filter(a=>a.doctor_id===USER.id&&a.date===today()&&a.status==='waiting')
+    .sort((a,b)=>a.time.localeCompare(b.time))[0];
+  if(next){next.status='serving';saveDB();toast('Called: '+userById(next.patient_id).name);go('dqueue');}
+}
+function finishServing(id){const a=DB.appointments.find(x=>x.id===id);a.status='completed';saveDB();go('dqueue');}
+PAGES.doctor.dappointments=function(){
+  setTitle('My Appointments');
+  const mine=DB.appointments.filter(a=>a.doctor_id===USER.id).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
+  render(tableAppts(mine,true));
+};
+PAGES.doctor.dpatients=function(){
+  setTitle('Patient Records');
+  render(`<div class="card p-3"><h6 class="fw-bold mb-3">Patients</h6>
+    <div class="table-responsive"><table class="table align-middle">
+    <thead><tr><th>Name</th><th>Role</th><th>Records</th><th>Action</th></tr></thead>
+    <tbody>${patients().map(p=>`<tr><td>${esc(p.name)}</td><td><span class="badge bg-light text-dark">${p.role}</span></td>
+      <td>${DB.medical_records.filter(r=>r.patient_id===p.id).length}</td>
+      <td><button class="btn btn-sm btn-outline-primary" onclick="viewPatient(${p.id})"><i class="bi bi-folder2-open me-1"></i>View History</button></td>
+    </tr>`).join('')}</tbody></table></div></div>`);
+};
+function viewPatient(id){
+  const p=userById(id);
+  const recs=DB.medical_records.filter(r=>r.patient_id===id);
+  const rx=DB.prescriptions.filter(r=>r.patient_id===id);
+  showModal('Patient: '+p.name,`
+    <h6 class="fw-bold text-primary">Medical Records</h6>
+    ${recs.map(r=>`<div class="border rounded p-2 mb-2 small"><strong>${esc(r.diagnosis)}</strong> · ${fmtDate(r.created_at)}<br>${esc(r.notes)}</div>`).join('')||'<p class="small text-muted">No records.</p>'}
+    <h6 class="fw-bold text-primary mt-3">Prescriptions</h6>
+    ${rx.map(r=>`<div class="border rounded p-2 mb-2 small">${esc(r.medicine)} · ${esc(r.dosage)} · ${esc(r.instructions)}</div>`).join('')||'<p class="small text-muted">None.</p>'}`);
+}
+PAGES.doctor.dconsult=function(){
+  setTitle('Consultations');
+  const mine=DB.appointments.filter(a=>a.doctor_id===USER.id&&['waiting','serving'].includes(a.status));
+  render(`<div class="card p-3"><h6 class="fw-bold mb-3">Active Consultations</h6>
+    ${mine.length?mine.map(a=>`<div class="d-flex justify-content-between align-items-center border-bottom py-2">
+      <div>${esc(userById(a.patient_id)?.name)} <span class="small text-muted">· ${a.time} · ${esc(a.reason)}</span> ${statusBadge(a.status)}</div>
+      <button class="btn btn-sm btn-primary" onclick="openConsult(${a.id})">Open</button></div>`).join('')
+      :'<p class="text-muted mb-0">No active consultations. Call patients from the queue.</p>'}</div>`);
+};
+function openConsult(id){
+  const a=DB.appointments.find(x=>x.id===id);const p=userById(a.patient_id);
+  showModal('Consultation · '+p.name,`
+    <ul class="nav nav-tabs mb-3" role="tablist">
+      <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabDiag">Diagnosis</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabRx">Prescription</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabMC">MC</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabRef">Refer</button></li>
+    </ul>
+    <div class="tab-content">
+      <div class="tab-pane fade show active" id="tabDiag">
+        <label class="form-label small">Diagnosis</label><input id="csDiag" class="form-control mb-2" placeholder="e.g. Viral fever">
+        <label class="form-label small">Consultation Notes</label><textarea id="csNotes" class="form-control mb-3" rows="3"></textarea>
+        <button class="btn btn-primary w-100" onclick="saveDiagnosis(${id})">Save Record & Complete</button>
+      </div>
+      <div class="tab-pane fade" id="tabRx">
+        <label class="form-label small">Medicine</label><input id="rxMed" class="form-control mb-2">
+        <label class="form-label small">Dosage</label><input id="rxDose" class="form-control mb-2">
+        <label class="form-label small">Instructions</label><input id="rxInstr" class="form-control mb-3">
+        <button class="btn btn-primary w-100" onclick="issueRx(${id})">Issue Prescription</button>
+      </div>
+      <div class="tab-pane fade" id="tabMC">
+        <label class="form-label small">Duration (days)</label><input id="mcDur" type="number" class="form-control mb-2" value="1" min="1">
+        <label class="form-label small">Remarks</label><input id="mcRem" class="form-control mb-3" placeholder="Reason for MC">
+        <button class="btn btn-primary w-100" onclick="issueMC(${id})">Issue Medical Certificate</button>
+      </div>
+      <div class="tab-pane fade" id="tabRef">
+        <label class="form-label small">Refer to Hospital</label><input id="refHosp" class="form-control mb-2" placeholder="Hospital name">
+        <label class="form-label small">Reason</label><input id="refReason" class="form-control mb-3">
+        <button class="btn btn-warning w-100" onclick="referPatient(${id})">Submit Referral</button>
+      </div>
+    </div>`);
+}
+function saveDiagnosis(id){
+  const a=DB.appointments.find(x=>x.id===id);
+  DB.medical_records.push({id:nextId(),patient_id:a.patient_id,doctor_id:USER.id,
+    diagnosis:$('csDiag').value||'General consultation',notes:$('csNotes').value,created_at:today()});
+  a.status='completed';saveDB();modal.hide();toast('Consultation completed');go('dashboard');
+}
+function issueRx(id){
+  const a=DB.appointments.find(x=>x.id===id);
+  DB.prescriptions.push({id:nextId(),patient_id:a.patient_id,doctor_id:USER.id,
+    medicine:$('rxMed').value,dosage:$('rxDose').value,instructions:$('rxInstr').value,created_at:today(),active:true});
+  saveDB();modal.hide();toast('Prescription issued');
+}
+function issueMC(id){
+  const a=DB.appointments.find(x=>x.id===id);
+  DB.medical_certificates.push({id:nextId(),patient_id:a.patient_id,doctor_id:USER.id,
+    issue_date:today(),duration:+$('mcDur').value,remarks:$('mcRem').value});
+  saveDB();modal.hide();toast('MC issued');
+}
+function referPatient(id){
+  const a=DB.appointments.find(x=>x.id===id);
+  DB.referrals.push({id:nextId(),patient_id:a.patient_id,doctor_id:USER.id,
+    hospital:$('refHosp').value,reason:$('refReason').value,date:today()});
+  saveDB();modal.hide();toast('Patient referred to '+($('refHosp').value||'hospital'));
+}
+
+/* ============================================================
+   ADMIN PAGES
+   ============================================================ */
+PAGES.admin.dashboard=function(){
+  setTitle('Admin Dashboard');
+  render(`<div class="row g-3 mb-4">
+    ${statCard('#1e5aa8','people-fill',DB.users.length,'Total Users')}
+    ${statCard('#2aa888','person-heart',patients().length,'Total Patients')}
+    ${statCard('#f0ad4e','calendar-week',DB.appointments.length,'Total Appointments')}
+    ${statCard('#6f42c1','person-badge',doctors().length,'Total Doctors')}
+  </div>
+  <div class="row g-3">
+    <div class="col-lg-8"><div class="card p-3">
+      <h6 class="fw-bold mb-3">Recent Appointments</h6>
+      <div class="table-responsive"><table class="table align-middle">
+      <thead><tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th></tr></thead>
+      <tbody>${DB.appointments.slice(-6).reverse().map(a=>`<tr><td>${esc(userById(a.patient_id)?.name)}</td>
+        <td>${esc(userById(a.doctor_id)?.name)}</td><td>${fmtDate(a.date)} ${a.time}</td><td>${statusBadge(a.status)}</td></tr>`).join('')}</tbody></table></div>
+    </div></div>
+    <div class="col-lg-4"><div class="card p-3 h-100">
+      <h6 class="fw-bold mb-3">Low Stock Alert</h6>
+      ${DB.inventory.filter(i=>i.quantity<50).map(i=>`<div class="d-flex justify-content-between border-bottom py-2 small">
+        <span>${esc(i.item_name)}</span><span class="badge bg-danger">${i.quantity}</span></div>`).join('')||'<p class="small text-muted">All stocks healthy.</p>'}
+    </div></div>
+  </div>`);
+};
+PAGES.admin.reports=function(){
+  setTitle('Reports & Analytics');
+  const todayCount=DB.appointments.filter(a=>a.date===today()).length;
+  const monthCount=DB.appointments.filter(a=>a.date.slice(0,7)===today().slice(0,7)).length;
+  const completed=DB.appointments.filter(a=>a.status==='completed').length;
+  const cancelled=DB.appointments.filter(a=>a.status==='cancelled').length;
+  const byDoc=doctors().map(d=>({name:d.name,n:DB.appointments.filter(a=>a.doctor_id===d.id).length}));
+  const max=Math.max(1,...byDoc.map(x=>x.n));
+  render(`<div class="row g-3 mb-4">
+    ${statCard('#1e5aa8','calendar-day',todayCount,'Appointments Today')}
+    ${statCard('#2aa888','calendar-month',monthCount,'This Month')}
+    ${statCard('#28a745','check2-circle',completed,'Completed')}
+    ${statCard('#dc3545','x-circle',cancelled,'Cancelled')}
+  </div>
+  <div class="row g-3">
+    <div class="col-lg-6"><div class="card p-3"><h6 class="fw-bold mb-3">Appointments per Doctor</h6>
+      ${byDoc.map(d=>`<div class="mb-2"><div class="d-flex justify-content-between small"><span>${esc(d.name)}</span><span>${d.n}</span></div>
+        <div class="progress" style="height:8px"><div class="progress-bar" style="width:${d.n/max*100}%;background:var(--primary)"></div></div></div>`).join('')}
+    </div></div>
+    <div class="col-lg-6"><div class="card p-3"><h6 class="fw-bold mb-3">User Statistics</h6>
+      ${['admin','doctor','lecturer','student'].map(r=>{const n=DB.users.filter(u=>u.role===r).length;
+        return `<div class="d-flex justify-content-between border-bottom py-2"><span class="text-capitalize">${r}</span><strong>${n}</strong></div>`}).join('')}
+      <div class="mt-3"><div class="d-flex justify-content-between"><span class="fw-bold">Prescriptions issued</span><strong>${DB.prescriptions.length}</strong></div>
+      <div class="d-flex justify-content-between"><span class="fw-bold">MCs issued</span><strong>${DB.medical_certificates.length}</strong></div></div>
+    </div></div>
+  </div>`);
+};
+PAGES.admin.users=function(){
+  setTitle('User Management');
+  render(`<div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="fw-bold mb-0">All Users</h6>
+    <button class="btn btn-primary btn-sm" onclick="editUser()"><i class="bi bi-person-plus me-1"></i>Add User</button></div>
+    <div class="card p-3"><div class="table-responsive"><table class="table align-middle">
+    <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+    <tbody>${DB.users.map(u=>`<tr><td>${u.id}</td><td>${esc(u.name)}</td><td class="small">${esc(u.email)}</td>
+      <td><span class="badge bg-light text-dark text-capitalize">${u.role}</span></td>
+      <td><button class="btn btn-sm btn-outline-primary me-1" onclick="editUser(${u.id})"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-sm btn-outline-danger" onclick="delUser(${u.id})" ${u.id===USER.id?'disabled':''}><i class="bi bi-trash"></i></button></td>
+    </tr>`).join('')}</tbody></table></div></div>`);
+};
+function editUser(id){
+  const u=id?userById(id):{name:'',email:'',role:'student',password:'123456'};
+  showModal((id?'Edit':'Add')+' User',`
+    <label class="form-label small">Full Name</label><input id="uName" class="form-control mb-2" value="${esc(u.name)}">
+    <label class="form-label small">Email</label><input id="uEmail" class="form-control mb-2" value="${esc(u.email)}">
+    <label class="form-label small">Role</label><select id="uRole" class="form-select mb-2">
+      ${['student','lecturer','doctor','admin'].map(r=>`<option ${u.role===r?'selected':''}>${r}</option>`).join('')}</select>
+    <label class="form-label small">Password</label><input id="uPass" class="form-control mb-3" value="${esc(u.password)}">
+    <button class="btn btn-primary w-100" onclick="saveUser(${id||0})">Save</button>`);
+}
+function saveUser(id){
+  const name=$('uName').value.trim(),email=$('uEmail').value.trim(),role=$('uRole').value,pass=$('uPass').value;
+  if(!name||!email)return;
+  if(id){const u=userById(id);Object.assign(u,{name,email,role,password:pass});}
+  else DB.users.push({id:nextId(),name,email,role,password:pass});
+  saveDB();modal.hide();toast('User saved');go('users');
+}
+function delUser(id){if(!confirm('Delete this user?'))return;DB.users=DB.users.filter(u=>u.id!==id);saveDB();go('users');}
+
+PAGES.admin.aappointments=function(){
+  setTitle('Appointment Management');
+  render(tableAppts([...DB.appointments].sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time)),false));
+};
+function tableAppts(list,doctorView){
+  return `<div class="card p-3"><h6 class="fw-bold mb-3">Appointments</h6>
+    <div class="table-responsive"><table class="table align-middle">
+    <thead><tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Time</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>${list.map(a=>`<tr><td>${esc(userById(a.patient_id)?.name)}</td><td>${esc(userById(a.doctor_id)?.name)}</td>
+      <td>${fmtDate(a.date)}</td><td>${a.time}</td><td class="small">${esc(a.reason)}</td><td>${statusBadge(a.status)}</td>
+      <td>${a.status!=='cancelled'&&a.status!=='completed'?`<button class="btn btn-sm btn-outline-danger" onclick="cancelAppt(${a.id})"><i class="bi bi-x-lg"></i></button>`:'-'}</td>
+    </tr>`).join('')||'<tr><td colspan="7" class="text-center text-muted py-3">No appointments.</td></tr>'}
+    </tbody></table></div></div>`;
+}
+PAGES.admin.schedules=function(){
+  setTitle('Doctor Schedules');
+  render(`<div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="fw-bold mb-0">Doctor Schedules</h6>
+    <button class="btn btn-primary btn-sm" onclick="editSchedule()"><i class="bi bi-plus-lg me-1"></i>Add Schedule</button></div>
+    <div class="card p-3"><div class="table-responsive"><table class="table align-middle">
+    <thead><tr><th>Doctor</th><th>Date</th><th>Start</th><th>End</th><th>Actions</th></tr></thead>
+    <tbody>${DB.doctor_schedules.map(s=>`<tr><td>${esc(userById(s.doctor_id)?.name)}</td><td>${fmtDate(s.working_date)}</td>
+      <td>${s.start_time}</td><td>${s.end_time}</td>
+      <td><button class="btn btn-sm btn-outline-primary me-1" onclick="editSchedule(${s.id})"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-sm btn-outline-danger" onclick="delSchedule(${s.id})"><i class="bi bi-trash"></i></button></td>
+    </tr>`).join('')}</tbody></table></div></div>`);
+};
+function editSchedule(id){
+  const s=id?DB.doctor_schedules.find(x=>x.id===id):{doctor_id:doctors()[0].id,working_date:today(),start_time:'08:00',end_time:'17:00'};
+  showModal((id?'Edit':'Add')+' Schedule',`
+    <label class="form-label small">Doctor</label><select id="schDoc" class="form-select mb-2">
+      ${doctors().map(d=>`<option value="${d.id}" ${s.doctor_id===d.id?'selected':''}>${esc(d.name)}</option>`).join('')}</select>
+    <label class="form-label small">Date</label><input id="schDate" type="date" class="form-control mb-2" value="${s.working_date}">
+    <div class="row g-2 mb-3"><div class="col"><label class="form-label small">Start</label><input id="schStart" type="time" class="form-control" value="${s.start_time}"></div>
+      <div class="col"><label class="form-label small">End</label><input id="schEnd" type="time" class="form-control" value="${s.end_time}"></div></div>
+    <button class="btn btn-primary w-100" onclick="saveSchedule(${id||0})">Save</button>`);
+}
+function saveSchedule(id){
+  const data={doctor_id:+$('schDoc').value,working_date:$('schDate').value,start_time:$('schStart').value,end_time:$('schEnd').value};
+  if(id)Object.assign(DB.doctor_schedules.find(x=>x.id===id),data);
+  else DB.doctor_schedules.push({id:nextId(),...data});
+  saveDB();modal.hide();toast('Schedule saved');go('schedules');
+}
+function delSchedule(id){if(!confirm('Delete schedule?'))return;DB.doctor_schedules=DB.doctor_schedules.filter(s=>s.id!==id);saveDB();go('schedules');}
+
+PAGES.admin.inventory=function(){
+  setTitle('Inventory Management');
+  render(`<div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="fw-bold mb-0">Medicine & Equipment Stock</h6>
+    <button class="btn btn-primary btn-sm" onclick="editItem()"><i class="bi bi-plus-lg me-1"></i>Add Item</button></div>
+    <div class="card p-3"><div class="table-responsive"><table class="table align-middle">
+    <thead><tr><th>Item</th><th>Category</th><th>Quantity</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>${DB.inventory.map(i=>`<tr><td>${esc(i.item_name)}</td>
+      <td><span class="badge ${i.category==='Medicine'?'bg-info text-dark':'bg-secondary'}">${i.category}</span></td>
+      <td>${i.quantity}</td><td>${i.quantity<50?'<span class="badge bg-danger">Low</span>':'<span class="badge bg-success">OK</span>'}</td>
+      <td><button class="btn btn-sm btn-outline-primary me-1" onclick="editItem(${i.id})"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-sm btn-outline-danger" onclick="delItem(${i.id})"><i class="bi bi-trash"></i></button></td>
+    </tr>`).join('')}</tbody></table></div></div>`);
+};
+function editItem(id){
+  const i=id?DB.inventory.find(x=>x.id===id):{item_name:'',category:'Medicine',quantity:0};
+  showModal((id?'Edit':'Add')+' Item',`
+    <label class="form-label small">Item Name</label><input id="itName" class="form-control mb-2" value="${esc(i.item_name)}">
+    <label class="form-label small">Category</label><select id="itCat" class="form-select mb-2">
+      <option ${i.category==='Medicine'?'selected':''}>Medicine</option><option ${i.category==='Equipment'?'selected':''}>Equipment</option></select>
+    <label class="form-label small">Quantity</label><input id="itQty" type="number" class="form-control mb-3" value="${i.quantity}">
+    <button class="btn btn-primary w-100" onclick="saveItem(${id||0})">Save</button>`);
+}
+function saveItem(id){
+  const data={item_name:$('itName').value.trim(),category:$('itCat').value,quantity:+$('itQty').value};
+  if(!data.item_name)return;
+  if(id)Object.assign(DB.inventory.find(x=>x.id===id),data);
+  else DB.inventory.push({id:nextId(),...data});
+  saveDB();modal.hide();toast('Item saved');go('inventory');
+}
+function delItem(id){if(!confirm('Delete item?'))return;DB.inventory=DB.inventory.filter(i=>i.id!==id);saveDB();go('inventory');}
+
+PAGES.admin.settings=function(){
+  setTitle('Clinic Settings');
+  const s=DB.settings;
+  render(`<div class="row justify-content-center"><div class="col-lg-7"><div class="card p-4">
+    <h6 class="fw-bold mb-3">Clinic Configuration</h6>
+    <label class="form-label small">Clinic Name</label><input id="stName" class="form-control mb-2" value="${esc(s.clinic_name)}">
+    <label class="form-label small">Opening Hours</label><input id="stHours" class="form-control mb-2" value="${esc(s.hours)}">
+    <label class="form-label small">Contact Number</label><input id="stContact" class="form-control mb-2" value="${esc(s.contact)}">
+    <label class="form-label small">Email</label><input id="stEmail" class="form-control mb-3" value="${esc(s.email)}">
+    <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+    <hr class="my-4"><h6 class="fw-bold text-danger">Danger Zone</h6>
+    <button class="btn btn-outline-danger btn-sm" onclick="resetDB()">Reset Database to Defaults</button>
+  </div></div></div>`);
+};
+function saveSettings(){
+  Object.assign(DB.settings,{clinic_name:$('stName').value,hours:$('stHours').value,contact:$('stContact').value,email:$('stEmail').value});
+  saveDB();toast('Settings saved');
+}
+function resetDB(){if(!confirm('Reset all data to defaults? This cannot be undone.'))return;localStorage.removeItem(DB_KEY);location.reload();}
+
+/* admin reuses common announcements */
+PAGES.admin.announcements=PAGES.common.announcements;
+
+/* ============================================================
+   INIT
+   ============================================================ */
+window.addEventListener('DOMContentLoaded', ()=>{
+  loadDB();
+  modal=new bootstrap.Modal($('appModal'));
+  // Restore session immediately so login works right away
+  const sid=sessionStorage.getItem('upnm_session');
+  if(sid){const u=userById(+sid);if(u){USER=u;enterApp();}}
+  $('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+  // Pull Supabase data in background (non-blocking)
+  syncFromSupabase().then(()=>{ setupRealtimeSync(); }).catch(()=>{});
+});
+</script>
+</body>
+</html>
