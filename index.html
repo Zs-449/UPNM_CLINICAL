@@ -293,6 +293,16 @@ function doRegister(){
   if(DB.users.some(u=>u.email.toLowerCase()===email))return fail('Email already registered.');
   err.classList.add('d-none');
   const u={id:nextId(),name,email,password:p1,role};
+  await supabase
+.from('users')
+.insert([
+{
+name,
+email,
+password:p1,
+role
+}
+]);
   DB.users.push(u);saveDB();
   USER=u;sessionStorage.setItem('upnm_session',u.id);
   enterApp();
